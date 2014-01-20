@@ -1,0 +1,5 @@
+
+(+ 1 1)
+
+run command this one 
+last line 
