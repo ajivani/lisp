@@ -4185,3 +4185,17 @@
 
 ;;notice how this works now - prints the extra spaces
 ;(remove-comments2 "/Volumes/MEDIA/lisp/pg/commentsfile.txt" "/Volumes/MEDIA/lisp/pg/myfile1.txt")
+
+;some stuff after adding it to the online git repo
+;touch README.md
+;git init
+;git add README.md
+;git commit -m "first commit"
+;git remote add origin https://github.com/ajivani/lisp.git
+;git push -u origin master
+
+;Push an existing repository from the command line
+;git remote add origin https://github.com/ajivani/lisp.git
+;git push -u origin master
+
+;lets test this now
