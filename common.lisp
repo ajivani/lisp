@@ -4199,3 +4199,6 @@
 ;git push -u origin master
 
 ;lets test this now
+;basically to clone we need git clone git://github.com/ajivani/lisp.git nameofgitfolder
+;then it automatically downloads stuff here!
+
