@@ -4181,10 +4181,11 @@
 			       :if-exists :supersede)
       (do ((line (read-line in nil 'eof) (read-line in nil 'eof)))
 	  ((eql line 'eof))
-	(format out "~A~%" (subseq line 0 (position #\% line)))))))
+	(format out "~A~%" (subseq line 0 (position #\% line))))))); this one adds teh new line
 
-;;notice how this works now - prints the extra spaces
+;;notice how this works now - prints the new line
 ;(remove-comments2 "/Volumes/MEDIA/lisp/pg/commentsfile.txt" "/Volumes/MEDIA/lisp/pg/myfile1.txt")
+
 
 ;some stuff after adding it to the online git repo
 ;touch README.md
@@ -4202,3 +4203,11 @@
 ;basically to clone we need git clone git://github.com/ajivani/lisp.git nameofgitfolder
 ;then it automatically downloads stuff here!
 
+;;7-4 - function that takes a 2d array of floats and displays it in neat columns
+
+;quick array review
+(setf 2darry (make-array '(10 4 2) :initial-element 2.718)) ;means 3d array
+(setf (aref 2darry 2 1 1) 'blue) ;see what element 
+(setf 2darry (make-array '(12 4) :initial-element 2.718))
+(setf (aref 2darry 3 1) 'changed-stuff)
+(array-dimensions 2darry) ;(12 4)
