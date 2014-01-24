@@ -3799,14 +3799,14 @@
    (read-line))
  ;;to display contents of file on the toplevel
  ;;explain function do #'do as well
- (defun pseudo-cat (file)
-   (with-open-file (str file :direction :input)
-     (do ((line (read-line str nil 'eof); initial val for line - the variable
-		(read-line str nil 'eof))); the incremental step for line
-	 ((eql line 'eof)); the stopping condition for 
-       (format t "~A~%" line)))) ; the with-open-file 
- ;;test it out
- (pseudo-cat "myfile.txt")
+(defun pseudo-cat (file)
+  (with-open-file (str file :direction :input)
+    (do ((line (read-line str nil 'eof); initial val for line - the variable
+	       (read-line str nil 'eof))); the incremental step for line
+	((eql line 'eof)); the stopping condition for 
+      (format t "~A~%" line)))) ; the with-open-file 
+;;test it out
+(pseudo-cat "myfile.txt")
 
  ;(defun ask-read ()
  ;  (read))
@@ -3814,21 +3814,24 @@
  ;(defun ask-number2 ()
  ;  (ask-number))
 
- ;;try read and read-from-string in the REPL
- (prin1 "hello")
- (princ "hello")
- ;;format directive
- (format nil "Dear ~A, ~% Our records indicate" "Mr Malatesta")
- (format t "~S ~A" "z" "z");~S directive uses prin1 and ~A directive uses princ 
- (format nil "~10,2,0,'*,' F" 26.21875)
- (format nil "~20,2,0,'*,' F" 26.21875)
- (format nil "~20,3,0,'*,' F" 26.21875)
- (format nil "~20,3,1,'*,' F" 26.21875);number of digits to shif the decimal point
- (format nil "~20,3,-1,'*,' F" 26.21875)
- (format nil "~20,100,1,'/,' F" 26.2187102398019830915); character to print when you don't have room
- (format nil "~,2,F" 26.21875)
- (format nil "~,2F" 26.49539)
- (format nil "~,1F" 1.25)
+;;try read and read-from-string in the REPL
+(prin1 "hello")
+(princ "hello")
+;;format directive
+(format nil "Dear ~A, ~% Our records indicate" "Mr Malatesta")
+(format t "~S ~A" "z" "z");~S directive uses prin1 and ~A directive uses princ 
+(format nil "~10,2,0,'*,' F" 26.21875)
+(format nil "~20,2,0,'*,' F" 26.21875)
+(format nil "~20,3,0,'*,' F" 26.21875)
+(format nil "~20,3,1,'*,' F" 26.21875) ;number of digits to shif the decimal point
+(format nil "~20,3,-1,'*,' F" 26.21875)
+(format nil "~20,100,1,'/,' F" 26.2187102398019830915) ; character to print when you don't have room
+(format nil "~,2,F" 26.21875) ;same as below
+(format nil "~,2F" 26.49539) ;same as thing below
+(format nil "~,1F" 1.25)
+;;adding more 
+(format nil "~,10F  ~,10,F" 2.7813 3.14159)
+
 
 
  ;;;output example with ring buffers and so on
@@ -4211,3 +4214,9 @@
 (setf 2darry (make-array '(12 4) :initial-element 2.718))
 (setf (aref 2darry 3 1) 'changed-stuff)
 (array-dimensions 2darry) ;(12 4)
+;;mess with these as well to get a feel for it
+(format nil "~5,50,F" 123.1234567909876543210)
+(format nil "~10,10,0,'*,F" 123.45678901234567890)
+(format nil "~10,10,0,'*,F" 123.45678901234567890)
+(format nil "~10,10,0,'*,F   ~10,2,0,,F" 123.45678901234567890 94123.7885)
+(format nil "~10,2,0,'*,F   ~10,2,0,,F ~%rest of it" 123.45678901234567890 94123.7885)
