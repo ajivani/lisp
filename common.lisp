@@ -1,4 +1,4 @@
-;Annsicommon lisp  
+;Ansi common lisp  
 ;;'y 'x '(and (integerp x) (zerop (mod x 2))))
 ;(trace function-name)
 ;all lisp expressions are atoms or 
@@ -1051,7 +1051,7 @@
  (char-code #\a) ;97
  ;returns the character for the code
  (code-char 97) ; a
- (sort "elbow" #'char<) ;accendign
+ (sort "elbow" #'char<) ;accending order
  (sort "asdflksaxcvjklj" #'char>) ;descending order 
  ;;strings are vectors so sequence and array functions worn on them
  (aref "abc" 1) ;#\b
@@ -4212,11 +4212,30 @@
 (setf 2darry (make-array '(10 4 2) :initial-element 2.718)) ;means 3d array
 (setf (aref 2darry 2 1 1) 'blue) ;see what element 
 (setf 2darry (make-array '(12 4) :initial-element 2.718))
+(setf 2darry2 (make-array '(3 9) :initial-element pi))
 (setf (aref 2darry 3 1) 'changed-stuff)
 (array-dimensions 2darry) ;(12 4)
 ;;mess with these as well to get a feel for it
 (format nil "~5,50,F" 123.1234567909876543210)
 (format nil "~10,10,0,'*,F" 123.45678901234567890)
-(format nil "~10,10,0,'*,F" 123.45678901234567890)
+(format nil "~10,5,0,'*,F" 123.45678901234567890)
 (format nil "~10,10,0,'*,F   ~10,2,0,,F" 123.45678901234567890 94123.7885)
-(format nil "~10,2,0,'*,F   ~10,2,0,,F ~%rest of it" 123.45678901234567890 94123.7885)
+(format nil "~10,2,0,'*,F   ~10,2,0,,F" 123.45678901234567890 94123.7885)
+(format nil "~10,5,0,'*,F   ~10,2,0,,F ~%rest of it" 123.45678901234567890 94123.7885)
+(format nil "~10,2,0,'*,F ~10,2,0,,F" 123.45678901234567890 94123.7885)
+(format nil "~10,2,0,'*,F~10,2,0,,F" 123.45678901234567890 94123.7885)
+(format nil "~10,8,0,'*,F~10,10,0,,F" 123.45678901234567890 94123.788580938409324809)
+
+;use dotimes to do this -- really easy :)
+(defun print-2d-array (arry)
+  (let* ((dims (array-dimensions arry))
+	 (a (car dims))
+	 (b (cadr dims)))
+    (dotimes (x a)
+      (format t "~%")
+      (dotimes (y b)
+	(format t "~10,2,0,'*,F" (aref arry x y))))))
+
+(print-2d-array 2darry)
+(print-2d-array 2darry2)
+
