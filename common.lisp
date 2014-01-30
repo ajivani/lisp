@@ -4239,3 +4239,35 @@
 (print-2d-array 2darry)
 (print-2d-array 2darry2)
 
+;7-5 modify stream-subst to allow wildcards in the pattern if the char + occurs in old, it should match any input char
+
+(defun stream-subst (old new in out)
+   (let* ((pos 0)
+	  (len (length old))
+	  (buf (new-buf len))
+	  (from-buf nil))
+     (do ((c (read-char in nil :eof)       ;(var initial-value update)
+	     (or (setf from-buf (buf-next buf)) 
+		 (read-char in nil :eof)))) 
+	 ((eql c :eof))                    ;stopping cond and return value
+       (cond ((OR (char= c (char old pos))     ;the body and expr in cron order
+		  (char= #\+ (char old pos))) ;so if it equals 
+	      (incf pos)
+	      (cond ((= pos len)            ; 3 we have complete match and we write the replacement to output stream and 
+		     (princ new out)
+		     (setf pos 0)
+		     (buf-clear buf))
+		    ((not from-buf)         ; 2 if match begins queue into the buffer b
+		     (buf-insert c buf))))
+	     ((zerop pos)                   ; 1 until it mataches the first character write back exactly the same thing to the output file
+	      (princ c out)
+	      (when from-buf
+		(buf-pop buf)
+		(buf-reset buf)))
+	     (t                             ; 4 if it fails before this point we can pop the first char in the buffer and write it to the output stream after which we reset the the buffer and start over with pos equal to zero
+	      (unless from-buf
+		(buf-insert c buf))
+	      (princ (buf-pop buf) out)
+	      (buf-reset buf)
+	      (setf pos 0))))
+     (buf-flush buf out)))
