@@ -4250,7 +4250,7 @@
 	     (or (setf from-buf (buf-next buf)) 
 		 (read-char in nil :eof)))) 
 	 ((eql c :eof))                    ;stopping cond and return value
-       (cond ((OR (char= c (char old pos))     ;the body and expr in cron order
+       (cond ((or (char= c (char old pos))     ;the body and expr in cron order
 		  (char= #\+ (char old pos))) ;so if it equals 
 	      (incf pos)
 	      (cond ((= pos len)            ; 3 we have complete match and we write the replacement to output stream and 
@@ -4271,3 +4271,11 @@
 	      (buf-reset buf)
 	      (setf pos 0))))
      (buf-flush buf out)))
+
+;7-6 modify stream-subst so the pattern can include an element that matches any digit character, an element that matches
+;any alphanumeric char, or an element that matches any char. the pattern must also be able to match any specific
+;input char (hint: old can no longer be a stringa)
+;;see the solution that uses labels - pg 102
+(labels ((add10 (x) (+ x 10))
+	 (consa (x) (cons 'a x)))
+  (consa (add10 13)))
