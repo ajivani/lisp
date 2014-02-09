@@ -4310,3 +4310,5 @@
 ;;;8-3 creating symbols
 ;;packages are symbol-tables mappings (mapping names to symbols)
 ;;a symbol that belongs to a package is said to be interned in that package - functions and vars have symbols as their names
+
+(intern "random-symbol")
