@@ -1,0 +1,303 @@
+;;7-1 takes a filename and returns a list of strings representing each line in the file.
+;;attempt 1 - doesn't work
+(defun file-to-list (filename)
+  (let ((path (make-pathname :name filename)))
+    (with-open-file (s path :direction :input)
+      (do ((line (read-line s nil 'eof)
+		 (read-line s nil 'eof)))
+	  (format t "~A~%" line)))))
+;;attempt 2 - wrong
+(defun file-to-list-helper (stream path)
+  (with-open-file (stream path :direction :input)
+    (do ((line (read-line stream nil 'eof)
+	       (read-line stream nil 'eof)))
+	(format t "~A~%" line))))
+(defun file-to-list (filename)
+  (let ((strlist nil))
+    (with-open-file (str filename :direction :input)
+      (do ((line (read-line str nil 'eof)
+		 (read-line str nil 'eof)))
+	  (push 1ine strlist)))))
+
+					; (file-to-list "myfile.txt") - myfile has to be a file of expressions
+
+
+(let ((list-strings nil))
+  (defun file-to-list (filename)
+    (with-open-file (stream filename :direction :input)
+      (do ((line (read-line stream nil 'eof)
+		 (read-line stream nil 'eof)))
+	  ((eql line 'eof)
+	   list-strings)
+	(push line list-strings)))))
+
+(setf *teststrings* nil)
+(setf *teststrings* (file-to-list "myfile.txt")) ;this duplicates it, we need something else
+
+
+
+
+;;7-1 the internet way using an accumulator
+(defun lines->list (path)
+  (with-open-file (str path :direction :input)
+    (do ((line (read-line str nil nil) (read-line str nil nil))
+	 (acc nil (cons line acc))) ;why not backwards
+	((not line) (nreverse acc)))))
+					;just for fun - and the wrong way
+(defun lines->list2 (path)
+  (with-open-file (str path :direction :input)
+    (do ((line (read-line str nil nil) (read-line str nil nil))
+	 (acc nil (cons acc line)))
+	((not line) acc))))
+
+
+(setf *teststrings3* nil)
+(setf *teststrings3* (lines->list "myfile.txt"))
+*teststrings3*
+(setf *teststrings3* (lines->list2 "myfile.txt"))
+*teststrings3*
+
+;;the let-over-lamda ends up saving the previous state! like a logger! seeems like cool
+;;here is what i want to do instead
+					;7-2
+(defun file-to-list (path)
+  (let ((list-strings nil))
+    (with-open-file (str path :direction :input)
+      (do ((line (read-line str 'nil 'eof) ;initial value for line
+		 (read-line str 'nil 'eof)))
+	  ((eql line 'eof) list-strings)
+	(push line list-strings)))))
+
+(setf *teststrings* (file-to-list "myfile.txt"))
+(first *teststrings*) ;see how this works no matter how many times you call the above command in a row (unlike usinng the let-over-lambda since that saves the var)
+
+(defun file-to-strings (path)
+  (let ((list-strings nil))
+    (with-open-file (str path :direction :input)
+      (do ((line (read-line str 'nil 'eof) (read-line str 'nil 'eof)))
+	  ((eql line 'eof) list-strings)
+	(push line list-strings)))))
+
+;;7-2
+(defun file-to-s-expressions (path)
+  (let ((list-exprs nil))
+    (with-open-file (str path :direction :input)
+      (do ((expr (read str nil nil) (read str nil nil)))
+	  ((eql expr 'eof) list-exprs)
+	(push expr list-exprs)))))
+
+
+(defun s->lists (path)
+  (with-open-file (str path :direction :input)
+    (do ((s (read str nil nil) (read str nil nil))
+	 (acc nil (cons s acc)))
+	((not s) (nreverse acc)))))
+
+(setf *teststrings4* nil)
+(setf *teststrings4* (file-to-s-expressions "exprfile.txt")) ; but this doesn't work!! causes errors still
+*teststrings4*
+(setf *teststrings4* (s->lists "exprfile.txt")) ; see this works 
+
+
+
+					;7-3 function that takes two filenames and writes the second file a copy of the first, minus comments
+(setf *lexample* "some code here % and some comments here")
+(subseq *lexample* 0 (position #\% *lexample*))
+
+(defun remove-comments (file1 file2)
+  (with-open-file (in file1 :direction :input)
+    (with-open-file (out file2 :direction :output
+			 :if-exists :supersede)
+      (do ((line (read-line in nil 'eof) (read-line in nil 'eof)))
+	  ((eql line 'eof))
+	(princ (subseq line 0 (position #\% line)) out)))))
+
+					;(remove-comments "/Volumes/MEDIA/lisp/pg/commentsfile.txt" "/Volumes/MEDIA/lisp/pg/myfile1.txt")
+
+(defun remove-comments2 (file1 file2)
+  (with-open-file (in file1 :direction :input)
+    (with-open-file (out file2 :direction :output
+			 :if-exists :supersede)
+      (do ((line (read-line in nil 'eof) (read-line in nil 'eof)))
+	  ((eql line 'eof))
+	(format out "~A~%" (subseq line 0 (position #\% line))))))); this one adds teh new line
+
+;;notice how this works now - prints the new line
+					;(remove-comments2 "/Volumes/MEDIA/lisp/pg/commentsfile.txt" "/Volumes/MEDIA/lisp/pg/myfile1.txt")
+
+
+					;some stuff after adding it to the online git repo
+					;touch README.md
+					;git init
+					;git add README.md ; or use "git add ." to add everything in this folder
+					;git commit -m "first commit"
+					;git remote add origin https://github.com/ajivani/lisp.git
+					;git push -u origin master
+
+					;Push an existing repository from the command line
+					;git remote add origin https://github.com/ajivani/lisp.git
+					;git push -u origin master
+
+					;lets test this now
+					;basically to clone we need git clone git://github.com/ajivani/lisp.git nameofgitfolder
+					;then it automatically downloads stuff here!
+
+;;7-4 - function that takes a 2d array of floats and displays it in neat columns
+
+					;quick array review
+(setf 2darry (make-array '(10 4 2) :initial-element 2.718)) ;means 3d array
+(setf (aref 2darry 2 1 1) 'blue) ;see what element 
+(setf 2darry (make-array '(12 4) :initial-element 2.718))
+(setf 2darry2 (make-array '(3 9) :initial-element pi))
+(setf (aref 2darry 3 1) 'changed-stuff)
+(array-dimensions 2darry) ;(12 4)
+;;mess with these as well to get a feel for it
+(format nil "~5,50,F" 123.1234567909876543210)
+(format nil "~10,10,0,'*,F" 123.45678901234567890)
+(format nil "~10,5,0,'*,F" 123.45678901234567890)
+(format nil "~10,10,0,'*,F   ~10,2,0,,F" 123.45678901234567890 94123.7885)
+(format nil "~10,2,0,'*,F   ~10,2,0,,F" 123.45678901234567890 94123.7885)
+(format nil "~10,5,0,'*,F   ~10,2,0,,F ~%rest of it" 123.45678901234567890 94123.7885)
+(format nil "~10,2,0,'*,F ~10,2,0,,F" 123.45678901234567890 94123.7885)
+(format nil "~10,2,0,'*,F~10,2,0,,F" 123.45678901234567890 94123.7885)
+(format nil "~10,8,0,'*,F~10,10,0,,F" 123.45678901234567890 94123.788580938409324809)
+
+					;use dotimes to do this -- really easy :)
+(defun print-2d-array (arry)
+  (let* ((dims (array-dimensions arry))
+	 (a (car dims))
+	 (b (cadr dims)))
+    (dotimes (x a)
+      (format t "~%")
+      (dotimes (y b)
+	(format t "~10,2,0,'*,F" (aref arry x y))))))
+
+(print-2d-array 2darry)
+(print-2d-array 2darry2)
+
+					;7-5 modify stream-subst to allow wildcards in the pattern if the char + occurs in old, it should match any input char
+
+(defun stream-subst (old new in out)
+  (let* ((pos 0)
+	 (len (length old))
+	 (buf (new-buf len))
+	 (from-buf nil))
+    (do ((c (read-char in nil :eof)       ;(var initial-value update)
+	    (or (setf from-buf (buf-next buf)) 
+		(read-char in nil :eof)))) 
+	((eql c :eof))                    ;stopping cond and return value
+      (cond ((or (char= c (char old pos))     ;the body and expr in cron order
+		 (char= #\+ (char old pos))) ;so if it equals 
+	     (incf pos)
+	     (cond ((= pos len)            ; 3 we have complete match and we write the replacement to output stream and 
+		    (princ new out)
+		    (setf pos 0)
+		    (buf-clear buf))
+		   ((not from-buf)         ; 2 if match begins queue into the buffer b
+		    (buf-insert c buf))))
+	    ((zerop pos)                   ; 1 until it mataches the first character write back exactly the same thing to the output file
+	     (princ c out)
+	     (when from-buf
+	       (buf-pop buf)
+	       (buf-reset buf)))
+	    (t                             ; 4 if it fails before this point we can pop the first char in the buffer and write it to the output stream after which we reset the the buffer and start over with pos equal to zero
+	     (unless from-buf
+	       (buf-insert c buf))
+	     (princ (buf-pop buf) out)
+	     (buf-reset buf)
+	     (setf pos 0))))
+    (buf-flush buf out)))
+
+					;7-6 modify stream-subst so the pattern can include an element that matches any digit character, an element that matches
+					;any alphanumeric char, or an element that matches any char. the pattern must also be able to match any specific
+					;input char (hint: old can no longer be a stringa)
+;;see the solution that uses labels - pg 102
+(labels ((add10 (x) (+ x 10))
+	 (consa (x) (cons 'a x)))
+  (consa (add10 13)))
+
+
+
+
+;;;;chapter 8  ch 8 chap 8 - symbols
+(symbol-name 'abc); can use symbols as names as well as data objects
+					;lisp is case insensitvie
+(eql 'aBc 'Abc)
+(CaR '(a b c)) 
+
+(list '|Lisp 1.5| '|| '|a b c|  '|abc| '|ABC|) ;when symbol name is read no case conversion and macro chars are treated like other chars
+
+(symbol-name '|a b c|) ; reutnrs "a b c" because that's the name
+
+;;;8-2 property lists
+
+;;get takes a symbol and a key of any type (using eql) and returns the value associated with that key
+;;in the symbol's property list 
+(get 'alizarian 'color) ;nil - this is returning the value associated with the key in the symobl's property list
+
+(setf (get 'alizarin 'color) 'red) ;how to assoc a value with a key use setf like so
+(get 'alizarin 'color)
+
+(setf (get 'alizarin 'transparancy) 'high)
+
+;;remember diagram from figure 8.1 has symbol ((name "FOO") (package somepackage) (value 27) (function #<function>) (plist (TRANSPARANCY HIGH COLOR RED)))
+(symbol-plist 'alizarin) ;property lists aren't represented as assoc lists though used int he same way (but nowdays we use hash tables instead) 
+
+;;;8-3 creating symbols
+;;packages are symbol-tables mappings (mapping names to symbols)
+;;a symbol that belongs to a package is said to be interned in that package - functions and vars have symbols as their names
+(intern "random-symbol") ;a way to intern a symbol - string and an optional package (defualts to current package)
+
+
+					;(defpackage "MY-APPLICATION"
+					;  (:use "COMMON-LISP" "MY-UTILITIES")
+					;  (:nicknames "APP")
+					;  (:export "WIN" "LOSE" "DRAW"))
+;;Keywords
+;;symbols in the keyword package (known as keywords) - 2 unique properties
+					;always evaluate to themselves and you can refer to them anywhere as :x instead of keyword:x
+
+(defun noise (animal)
+  (case animal
+    (:dog :woof)
+    (:cat :meow)
+    (keyword:pig :oink))) ;see how 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

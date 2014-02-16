@@ -1367,11 +1367,11 @@
  (setf nums (bst-remove 5 nums #'<))
  (bst-find 4 nums #'<)
 
- (defun bst-traverse (fn bst)
-   (when bst ;if condition is true it will do all of the following
-     (bst-traverse fn (node-l bst))
-     (funcall fn (node-elem bst))
-     (bst-traverse fn (node-r bst))))
+(defun bst-traverse (fn bst)
+  (when bst ;if condition is true it will do all of the following
+    (bst-traverse fn (node-l bst))
+    (funcall fn (node-elem bst))
+    (bst-traverse fn (node-r bst))))
  ;;use
  (bst-traverse #'princ nums) ;princ just prints one object
 
@@ -3779,26 +3779,26 @@
  ;;;*standard-input* - to read from the stream
  ;;;*standard-output* - default place for output` 
  ;;;7.1 - streams
- (setf path (make-pathname :name "myfile.txt")); pathname
- (setf str (open path :direction :output
-		      :if-exists :supersede)); stream gets overwritten
- (format str "Something~%"); if we give this stream to format it will print it to that file
- (format str "and this as well~%"); now write to this stream (which isn't the defaut terminal anymore)
- (close str)
- (setf str (open path :direction :input))
- (read-line str)
- (read-line str); done the second time to show that we can get the second line as well.
- (close str)
- (with-open-file (str path :direction :output
-			   :if-exists :append) ;found this by hyperspec it said it uses the same args as open
-   (format str "blah~A~%" (random 100)))
+(setf path (make-pathname :name "myfile.txt")); pathname
+(setf str (open path :direction :output
+		:if-exists :supersede)); stream gets overwritten
+(format str "Something~%"); if we give this stream to format it will print it to that file
+(format str "and this as well~%"); now write to this stream (which isn't the defaut terminal anymore)
+(close str)
+(setf str (open path :direction :input))
+(read-line str)
+(read-line str); done the second time to show that we can get the second line as well.
+(close str)
+(with-open-file (str path :direction :output
+		     :if-exists :append) ;found this by hyperspec it said it uses the same args as open
+  (format str "blah~A~%" (random 100)))
 
  ;;;7.2 input
- (defun try-input ()
-   (format t "Please enter your name: ")
-   (read-line))
- ;;to display contents of file on the toplevel
- ;;explain function do #'do as well
+(defun try-input ()
+  (format t "Please enter your name: ")
+  (read-line))
+;;to display contents of file on the toplevel
+;;explain function do #'do as well
 (defun pseudo-cat (file)
   (with-open-file (str file :direction :input)
     (do ((line (read-line str nil 'eof); initial val for line - the variable
@@ -3808,18 +3808,18 @@
 ;;test it out
 (pseudo-cat "myfile.txt")
 
- ;(defun ask-read ()
- ;  (read))
+					;(defun ask-read ()
+					;  (read))
 
- ;(defun ask-number2 ()
- ;  (ask-number))
+					;(defun ask-number2 ()
+					;  (ask-number))
 
 ;;try read and read-from-string in the REPL
 (prin1 "hello")
 (princ "hello")
 ;;format directive
 (format nil "Dear ~A, ~% Our records indicate" "Mr Malatesta")
-(format t "~S ~A" "z" "z");~S directive uses prin1 and ~A directive uses princ 
+(format t "~S ~A" "z" "z") ;~S directive uses prin1 and ~A directive uses princ 
 (format nil "~10,2,0,'*,' F" 26.21875)
 (format nil "~20,2,0,'*,' F" 26.21875)
 (format nil "~20,3,0,'*,' F" 26.21875)
@@ -3835,380 +3835,380 @@
 
 
  ;;;output example with ring buffers and so on
- ;(defstruct buf
- ;  vec (start -1) (used -1) (new -1) (end -1))
- ;;getter - for when you use bref as a getter
- ;(defun bref (buf n)
- ;  (svref (buf-vec buf)
- ;         (mod n (length (buf-vec buf)))))
- ;setter for what happens when you call setf with bref - seems pretty cool
- ;(defun (setf bref) (val buf n)
- ;  (setf (svref (buf-vec buf)
- ;               (mod n (length (buf-vec buf))))
- ;        val))
- ;;a new buffer is a vector - a 1 dimensional array
- ;(defun new-buf (len)
- ;  (make-buf :vec (make-array len)))
+					;(defstruct buf
+					;  vec (start -1) (used -1) (new -1) (end -1))
+;;getter - for when you use bref as a getter
+					;(defun bref (buf n)
+					;  (svref (buf-vec buf)
+					;         (mod n (length (buf-vec buf)))))
+					;setter for what happens when you call setf with bref - seems pretty cool
+					;(defun (setf bref) (val buf n)
+					;  (setf (svref (buf-vec buf)
+					;               (mod n (length (buf-vec buf))))
+					;        val))
+;;a new buffer is a vector - a 1 dimensional array
+					;(defun new-buf (len)
+					;  (make-buf :vec (make-array len)))
  ;;;buf insert
- ;(defun buf-insert (x b)
- ;  (setf (bref b (incf (buf-end b)))
- ;        x))
- ;
- ;(defun buf-pop (b)
- ;  (prog1
- ;    (bref b (incf (buf-start b)))
- ;    (setf (buf-used b) (buf-start b)
- ;          (buf-new b) (buf-end b))))
- ;
- ;(defun buf-next (b)
- ;  (when (< (buf-used b) (buf-new b))
- ;    (bref b (incf (buf-used b)))))
- ;
- ;(defun buf-reset (b)
- ;  (setf (buf-used b) (buf-start b)
- ;        (buf-new b)  (buf-end b)))
- ;
- ;(defun buf-clear (b)
- ;  (setf (buf-start b) -1 (buf-used b) -1
- ;        (buf-new   b) -1 (buf-end b) -1))
- ;
- ;(defun buf-flush (b str)
- ;  (do ((i (1+ (buf-used b)) (1+ i)))
- ;      ((> i (buf-end b)))
- ;    (princ (bref b i) str)))
+					;(defun buf-insert (x b)
+					;  (setf (bref b (incf (buf-end b)))
+					;        x))
+					;
+					;(defun buf-pop (b)
+					;  (prog1
+					;    (bref b (incf (buf-start b)))
+					;    (setf (buf-used b) (buf-start b)
+					;          (buf-new b) (buf-end b))))
+					;
+					;(defun buf-next (b)
+					;  (when (< (buf-used b) (buf-new b))
+					;    (bref b (incf (buf-used b)))))
+					;
+					;(defun buf-reset (b)
+					;  (setf (buf-used b) (buf-start b)
+					;        (buf-new b)  (buf-end b)))
+					;
+					;(defun buf-clear (b)
+					;  (setf (buf-start b) -1 (buf-used b) -1
+					;        (buf-new   b) -1 (buf-end b) -1))
+					;
+					;(defun buf-flush (b str)
+					;  (do ((i (1+ (buf-used b)) (1+ i)))
+					;      ((> i (buf-end b)))
+					;    (princ (bref b i) str)))
 
 
 
 
- (defstruct buf
-   vec (start -1) (used -1) (new -1) (end -1))
+(defstruct buf
+  vec (start -1) (used -1) (new -1) (end -1))
 
- (defun bref (buf n)
-   (svref (buf-vec buf)
-	  (mod n (length (buf-vec buf)))))
+(defun bref (buf n)
+  (svref (buf-vec buf)
+	 (mod n (length (buf-vec buf)))))
 
- (defun (setf bref) (val buf n)
-   (setf (svref (buf-vec buf)
-		(mod n (length (buf-vec buf))))
-	 val))
+(defun (setf bref) (val buf n)
+  (setf (svref (buf-vec buf)
+	       (mod n (length (buf-vec buf))))
+	val))
 
- (defun new-buf (len)
-   (make-buf :vec (make-array len)))
+(defun new-buf (len)
+  (make-buf :vec (make-array len)))
 
- (defun buf-insert (x b)
-   (setf (bref b (incf (buf-end b))) x))
+(defun buf-insert (x b)
+  (setf (bref b (incf (buf-end b))) x))
 
- (defun buf-pop (b)
-   (prog1 
-     (bref b (incf (buf-start b)))
-     (setf (buf-used b) (buf-start b)
-	   (buf-new  b) (buf-end   b))))
+(defun buf-pop (b)
+  (prog1 
+      (bref b (incf (buf-start b)))
+    (setf (buf-used b) (buf-start b)
+	  (buf-new  b) (buf-end   b))))
 
- (defun buf-next (b)
-   (when (< (buf-used b) (buf-new b))
-     (bref b (incf (buf-used b)))))
+(defun buf-next (b)
+  (when (< (buf-used b) (buf-new b))
+    (bref b (incf (buf-used b)))))
 
- (defun buf-reset (b)
-   (setf (buf-used b) (buf-start b)
-	 (buf-new  b) (buf-end   b)))
+(defun buf-reset (b)
+  (setf (buf-used b) (buf-start b)
+	(buf-new  b) (buf-end   b)))
 
- (defun buf-clear (b)
-   (setf (buf-start b) -1 (buf-used  b) -1
-	 (buf-new   b) -1 (buf-end   b) -1))
+(defun buf-clear (b)
+  (setf (buf-start b) -1 (buf-used  b) -1
+	(buf-new   b) -1 (buf-end   b) -1))
 
- (defun buf-flush (b str)
-   (do ((i (1+ (buf-used b)) (1+ i)))
-       ((> i (buf-end b)))
-     (princ (bref b i) str)))
+(defun buf-flush (b str)
+  (do ((i (1+ (buf-used b)) (1+ i)))
+      ((> i (buf-end b)))
+    (princ (bref b i) str)))
 
- (setf my-buf (new-buf 3))
- (buf-insert 101 my-buf)
- (buf-insert 99 my-buf)
- (buf-insert 22 my-buf)
- (buf-insert 1 my-buf)
- (buf-pop my-buf)
- (buf-next my-buf)
- (buf-reset my-buf)
- (buf-clear my-buf)
- my-buf
- (buf-pop my-buf)
+(setf my-buf (new-buf 3))
+(buf-insert 101 my-buf)
+(buf-insert 99 my-buf)
+(buf-insert 22 my-buf)
+(buf-insert 1 my-buf)
+(buf-pop my-buf)
+(buf-next my-buf)
+(buf-reset my-buf)
+(buf-clear my-buf)
+my-buf
+(buf-pop my-buf)
 
- (buf-insert '3 my-buf)
- (buf-insert '3 my-buf)
- (buf-insert '3 my-buf)
- (buf-pop my-buf)
- (buf-next my-buf)
- (buf-flush)
+(buf-insert '3 my-buf)
+(buf-insert '3 my-buf)
+(buf-insert '3 my-buf)
+(buf-pop my-buf)
+(buf-next my-buf)
+(buf-flush my-buf nil);error here!
 
- ;;now try writing this out and figureing it out
+;;now try writing this out and figureing it out
 
- (defun file-subst (old new file1 file2)
-   (with-open-file (in file1 :direction :input)
-      (with-open-file (out file2 :direction :output
-				 :if-exists :supersede)
-	 (stream-subst old new in out))))
+(defun file-subst (old new file1 file2)
+  (with-open-file (in file1 :direction :input)
+    (with-open-file (out file2 :direction :output
+			 :if-exists :supersede)
+      (stream-subst old new in out))))
 
- (defun stream-subst (old new in out)
-   (let* ((pos 0)
-	  (len (length old))
-	  (buf (new-buf len))
-	  (from-buf nil))
-     (do ((c (read-char in nil :eof)       ;(var initial-value update)
-	     (or (setf from-buf (buf-next buf)) 
-		 (read-char in nil :eof)))) 
-	 ((eql c :eof))                    ;stopping cond and return value
-       (cond ((char= c (char old pos))     ;the body and expr in cron order
-	      (incf pos)
-	      (cond ((= pos len)            ; 3 we have complete match and we write the replacement to output stream and 
-		     (princ new out)
-		     (setf pos 0)
-		     (buf-clear buf))
-		    ((not from-buf)         ; 2 if match begins queue into the buffer b
-		     (buf-insert c buf))))
-	     ((zerop pos)                   ; 1 until it mataches the first character write back exactly the same thing to the output file
-	      (princ c out)
-	      (when from-buf
-		(buf-pop buf)
-		(buf-reset buf)))
-	     (t                             ; 4 if it fails before this point we can pop the first char in the buffer and write it to the output stream after which we reset the the buffer and start over with pos equal to zero
-	      (unless from-buf
-		(buf-insert c buf))
-	      (princ (buf-pop buf) out)
-	      (buf-reset buf)
-	      (setf pos 0))))
-     (buf-flush buf out)))
+(defun stream-subst (old new in out)
+  (let* ((pos 0)
+	 (len (length old))
+	 (buf (new-buf len))
+	 (from-buf nil))
+    (do ((c (read-char in nil :eof)       ;(var initial-value update)
+	    (or (setf from-buf (buf-next buf)) 
+		(read-char in nil :eof)))) 
+	((eql c :eof))                    ;stopping cond and return value
+      (cond ((char= c (char old pos))     ;the body and expr in cron order
+	     (incf pos)
+	     (cond ((= pos len)            ; 3 we have complete match and we write the replacement to output stream and 
+		    (princ new out)
+		    (setf pos 0)
+		    (buf-clear buf))
+		   ((not from-buf)         ; 2 if match begins queue into the buffer b
+		    (buf-insert c buf))))
+	    ((zerop pos)                   ; 1 until it mataches the first character write back exactly the same thing to the output file
+	     (princ c out)
+	     (when from-buf
+	       (buf-pop buf)
+	       (buf-reset buf)))
+	    (t                             ; 4 if it fails before this point we can pop the first char in the buffer and write it to the output stream after which we reset the the buffer and start over with pos equal to zero
+	     (unless from-buf
+	       (buf-insert c buf))
+	     (princ (buf-pop buf) out)
+	     (buf-reset buf)
+	     (setf pos 0))))
+    (buf-flush buf out)))
 
- (file-subst "baro" "baric" "~/lisp/pg/myfile.txt" "~/lisp/pg/outputfile.txt")
- (file-subst "bar" "XxxxX" "~/lisp/pg/myfile.txt" "~/lisp/pg/outputfile.txt")
- ;(step (file-subst "baro" "baric123456" "~/lisp/pg/myfile.txt" "~/lisp/pg/outputfile.txt"))
- (file-subst " th" " z" "test1" "test2")
- ;;file with word barbarous
- ;;sub "baro" baric
+(file-subst "baro" "baric" "~/lisp/pg/myfile.txt" "~/lisp/pg/outputfile.txt")
+(file-subst "bar" "XxxxX" "~/lisp/pg/myfile.txt" "~/lisp/pg/outputfile.txt")
+					;(step (file-subst "baro" "baric123456" "~/lisp/pg/myfile.txt" "~/lisp/pg/outputfile.txt"))
+(file-subst " th" " z" "test1" "test2")
+;;file with word barbarous
+;;sub "baro" baric
 
 
  ;;;;needed to do this to see what the hell was happening in the above code
  ;;;;algorithm is pretty simple after going over it
- (setf my-buf (new-buf 4))
- (buf-insert 'b my-buf) ;2
- (buf-insert 'a my-buf);2
- (buf-insert 'r my-buf);2
- (buf-insert 'b my-buf);4 - unless from-buf (which is nil in this case so it'll insert 'b into the buffer
- (princ (buf-pop my-buf));4 but pop out the first b - and setf to zero since this wasn't a match
- (buf-reset my-buf);4 ;resets the buffer - means the next thing must be chosen from the buffer
- my-buf
- (buf-next my-buf); from the loop - 'a is the value that gets passed to c (our character incrementer)
- (princ 'a) ;1 - to the output stream
- (buf-pop my-buf); and removes a from the buffer
- (buf-reset my-buf); so that it tries to get the rest of the stuff from the buffer
- my-buf
- (buf-next my-buf); from the loop - 'a is the value that gets passed to c (our character incrementer)
- (princ 'r) ;1 - to the output stream
- (buf-pop my-buf); and removes r from the buffer
- (buf-reset my-buf)
- my-buf
- (buf-next my-buf)
- ;;here's where it goes into 1 and pos = 1
- (buf-next my-buf); nil
- ;;read in the next character -- barb - a
- (char "baro" 1); a == a
- (buf-insert 'a my-buf)
- my-buf
- ;read in next character - barba - r
- (char "baro" 2); r == r
- (buf-insert 'r my-buf)
- my-buf
- ;;read in next char - barbar - o
- my-buf
- (buf-next my-buf) ;nil - so the next char read is o
+(setf my-buf (new-buf 4))
+(buf-insert 'b my-buf) ;2
+(buf-insert 'a my-buf);2
+(buf-insert 'r my-buf);2
+(buf-insert 'b my-buf);4 - unless from-buf (which is nil in this case so it'll insert 'b into the buffer
+(princ (buf-pop my-buf));4 but pop out the first b - and setf to zero since this wasn't a match
+(buf-reset my-buf);4 ;resets the buffer - means the next thing must be chosen from the buffer
+my-buf
+(buf-next my-buf); from the loop - 'a is the value that gets passed to c (our character incrementer)
+(princ 'a) ;1 - to the output stream
+(buf-pop my-buf); and removes a from the buffer
+(buf-reset my-buf); so that it tries to get the rest of the stuff from the buffer
+my-buf
+(buf-next my-buf); from the loop - 'a is the value that gets passed to c (our character incrementer)
+(princ 'r) ;1 - to the output stream
+(buf-pop my-buf); and removes r from the buffer
+(buf-reset my-buf)
+my-buf
+(buf-next my-buf)
+;;here's where it goes into 1 and pos = 1
+(buf-next my-buf); nil
+;;read in the next character -- barb - a
+(char "baro" 1); a == a
+(buf-insert 'a my-buf)
+my-buf
+					;read in next character - barba - r
+(char "baro" 2); r == r
+(buf-insert 'r my-buf)
+my-buf
+;;read in next char - barbar - o
+my-buf
+(buf-next my-buf) ;nil - so the next char read is o
 
- (char "baro" 3) ; 0==o 
- ;;position 3
- (length "baro"); 4 == pos == lenght of string so we can replace and reset
- (princ "baric")
- (buf-clear my-buf)
- my-buf
- (buf-next my-buf); nil so barbaro - u
- (princ 'u); 1
- my-buf
- (buf-next my-buf); nil so barbarou - s
- (princ 's); 1
+(char "baro" 3) ; 0==o 
+;;position 3
+(length "baro"); 4 == pos == lenght of string so we can replace and reset
+(princ "baric")
+(buf-clear my-buf)
+my-buf
+(buf-next my-buf); nil so barbaro - u
+(princ 'u); 1
+my-buf
+(buf-next my-buf); nil so barbarou - s
+(princ 's); 1
 
- ;;read macro
- ;;remember to start emacs do the following:
- ;;C-x 3 2 -- starts the emacs buffer
- ;;C-x 5 2 -- opens a new window
- ;;go to other window and click - M-x slime - this will start the slime buffer
- ;;if a buffer moves away or whatever, you can always do a quick - M-x switch-to-buffer command and get there
- ;;C-c C-c - will compile the whatever you want into the repl
- ;;C-x C-p will do a quick eval of the
- (car (read-from-string "'a")) ; notice how it prints quote the macro character
- (car (read-from-string "(quote a)"))
- (cadr (read-from-string "'a")) ; see how this is a now
- (car (read-from-string "#'+")) ; function (like quote but you see how this is a function dispatch macro)
- ;;other dispatching read macros
- ;(car (read-from-string "#(1 2 3)"))
- (car (read-from-string "(vectora 1 2 3)"))
- (let ((*print-pretty* t))
-   (vectorp (read-from-string (format nil "~S"
-				      (vector 1 2))))) ;evals to T 
- (vectorp (car (read-from-string "(vector 1 2 3)"))) ;returns nil
- (vectorp (read-from-string (format nil "~S"
-				    (vector 1 2)))) ; evals to T
- (let ((*print-pretty* t))
-   (read-from-string (format nil "~S"
-			     (vector 1 2)))) ;notice that it actually uses the read macro to get this stuff
- ;;this makes it an actual vector! so you're reading in a vector not the string when you use the read macro
- ;(let ((*print-pretty* t))
- ;  (prin1 (read-from-string (vector 1 2))))
- ;so when read encounters a macro character like ' it calls the associated function
+;;read macro
+;;remember to start emacs do the following:
+;;C-x 3 2 -- starts the emacs buffer
+;;C-x 5 2 -- opens a new window
+;;go to other window and click - M-x slime - this will start the slime buffer
+;;if a buffer moves away or whatever, you can always do a quick - M-x switch-to-buffer command and get there
+;;C-c C-c - will compile the whatever you want into the repl
+;;C-x C-p will do a quick eval of the
+(car (read-from-string "'a")) ; notice how it prints quote the macro character
+(car (read-from-string "(quote a)"))
+(cadr (read-from-string "'a")) ; see how this is a now
+(car (read-from-string "#'+")) ; function (like quote but you see how this is a function dispatch macro)
+;;other dispatching read macros
+					;(car (read-from-string "#(1 2 3)"))
+(car (read-from-string "(vectora 1 2 3)"))
+(let ((*print-pretty* t))
+  (vectorp (read-from-string (format nil "~S"
+				     (vector 1 2))))) ;evals to T 
+(vectorp (car (read-from-string "(vector 1 2 3)"))) ;returns nil
+(vectorp (read-from-string (format nil "~S"
+				   (vector 1 2)))) ; evals to T
+(let ((*print-pretty* t))
+  (read-from-string (format nil "~S"
+			    (vector 1 2)))) ;notice that it actually uses the read macro to get this stuff
+;;this makes it an actual vector! so you're reading in a vector not the string when you use the read macro
+					;(let ((*print-pretty* t))
+					;  (prin1 (read-from-string (vector 1 2))))
+					;so when read encounters a macro character like ' it calls the associated function
 
- ;;7-1 takes a filename and returns a list of strings representing each line in the file.
- ;;attempt 1 - doesn't work
- (defun file-to-list (filename)
-   (let ((path (make-pathname :name filename)))
-     (with-open-file (s path :direction :input)
-       (do ((line (read-line s nil 'eof)
-		  (read-line s nil 'eof)))
-	   (format t "~A~%" line)))))
- ;;attempt 2 - wrong
- (defun file-to-list-helper (stream path)
-   (with-open-file (stream path :direction :input)
-     (do ((line (read-line stream nil 'eof)
-		(read-line stream nil 'eof)))
-	 (format t "~A~%" line))))
- (defun file-to-list (filename)
-   (let ((strlist nil))
-     (with-open-file (str filename :direction :input)
-       (do ((line (read-line str nil 'eof)
-		  (read-line str nil 'eof)))
-	   (push 1ine strlist)))))
+;;7-1 takes a filename and returns a list of strings representing each line in the file.
+;;attempt 1 - doesn't work
+(defun file-to-list (filename)
+  (let ((path (make-pathname :name filename)))
+    (with-open-file (s path :direction :input)
+      (do ((line (read-line s nil 'eof)
+		 (read-line s nil 'eof)))
+	  (format t "~A~%" line)))))
+;;attempt 2 - wrong
+(defun file-to-list-helper (stream path)
+  (with-open-file (stream path :direction :input)
+    (do ((line (read-line stream nil 'eof)
+	       (read-line stream nil 'eof)))
+	(format t "~A~%" line))))
+(defun file-to-list (filename)
+  (let ((strlist nil))
+    (with-open-file (str filename :direction :input)
+      (do ((line (read-line str nil 'eof)
+		 (read-line str nil 'eof)))
+	  (push 1ine strlist)))))
 
- (file-to-list "myfile.txt")
-
-
- (let ((list-strings nil))
-   (defun file-to-list (filename)
-     (with-open-file (stream filename :direction :input)
-       (do ((line (read-line stream nil 'eof)
-		  (read-line stream nil 'eof)))
-	   ((eql line 'eof)
-	    list-strings)
-	 (push line list-strings)))))
-
- (setf *teststrings* nil)
- (setf *teststrings* (file-to-list "myfile.txt")) ;this duplicates it, we need something else
+					; (file-to-list "myfile.txt") - myfile has to be a file of expressions
 
 
+(let ((list-strings nil))
+  (defun file-to-list (filename)
+    (with-open-file (stream filename :direction :input)
+      (do ((line (read-line stream nil 'eof)
+		 (read-line stream nil 'eof)))
+	  ((eql line 'eof)
+	   list-strings)
+	(push line list-strings)))))
 
-
- ;;7-1 the internet way using an accumulator
- (defun lines->list (path)
-   (with-open-file (str path :direction :input)
-     (do ((line (read-line str nil nil) (read-line str nil nil))
-	  (acc nil (cons line acc))) ;why not backwards
-	 ((not line) (nreverse acc)))))
- ;just for fun - and the wrong way
- (defun lines->list2 (path)
-   (with-open-file (str path :direction :input)
-     (do ((line (read-line str nil nil) (read-line str nil nil))
-	  (acc nil (cons acc line)))
-	 ((not line) acc))))
-
-
- (setf *teststrings3* nil)
- (setf *teststrings3* (lines->list "myfile.txt"))
- *teststrings3*
- (setf *teststrings3* (lines->list2 "myfile.txt"))
- *teststrings3*
-
- ;;the let-over-lamda ends up saving the previous state! like a logger! seeems like cool
- ;;here is what i want to do instead
- ;7-2
- (defun file-to-list (path)
-   (let ((list-strings nil))
-     (with-open-file (str path :direction :input)
-       (do ((line (read-line str 'nil 'eof) ;initial value for line
-		  (read-line str 'nil 'eof)))
-	   ((eql line 'eof) list-strings)
-	 (push line list-strings)))))
-
- (setf *teststrings* (file-to-list "myfile.txt"))
- (first *teststrings*) ;see how this works no matter how many times you call the above command in a row (unlike usinng the let-over-lambda since that saves the var)
-
- (defun file-to-strings (path)
-   (let ((list-strings nil))
-     (with-open-file (str path :direction :input)
-       (do ((line (read-line str 'nil 'eof) (read-line str 'nil 'eof)))
-	   ((eql line 'eof) list-strings)
-	 (push line list-strings)))))
-
- ;;7-2
- (defun file-to-s-expressions (path)
-   (let ((list-exprs nil))
-     (with-open-file (str path :direction :input)
-       (do ((expr (read str nil nil) (read str nil nil)))
-	   ((eql expr 'eof) list-exprs)
-	 (push expr list-exprs)))))
-
-
- (defun s->lists (path)
-   (with-open-file (str path :direction :input)
-     (do ((s (read str nil nil) (read str nil nil))
-	  (acc nil (cons s acc)))
-	 ((not s) (nreverse acc)))))
-
- (setf *teststrings4* nil)
- (setf *teststrings4* (file-to-s-expressions "exprfile.txt")); but this doesn't work!! causes errors still
- *teststrings4*
- (setf *teststrings4* (s->lists "exprfile.txt")) ; see this works 
+(setf *teststrings* nil)
+(setf *teststrings* (file-to-list "myfile.txt")) ;this duplicates it, we need something else
 
 
 
-;7-3 function that takes two filenames and writes the second file a copy of the first, minus comments
+
+;;7-1 the internet way using an accumulator
+(defun lines->list (path)
+  (with-open-file (str path :direction :input)
+    (do ((line (read-line str nil nil) (read-line str nil nil))
+	 (acc nil (cons line acc))) ;why not backwards
+	((not line) (nreverse acc)))))
+					;just for fun - and the wrong way
+(defun lines->list2 (path)
+  (with-open-file (str path :direction :input)
+    (do ((line (read-line str nil nil) (read-line str nil nil))
+	 (acc nil (cons acc line)))
+	((not line) acc))))
+
+
+(setf *teststrings3* nil)
+(setf *teststrings3* (lines->list "myfile.txt"))
+*teststrings3*
+(setf *teststrings3* (lines->list2 "myfile.txt"))
+*teststrings3*
+
+;;the let-over-lamda ends up saving the previous state! like a logger! seeems like cool
+;;here is what i want to do instead
+					;7-2
+(defun file-to-list (path)
+  (let ((list-strings nil))
+    (with-open-file (str path :direction :input)
+      (do ((line (read-line str 'nil 'eof) ;initial value for line
+		 (read-line str 'nil 'eof)))
+	  ((eql line 'eof) list-strings)
+	(push line list-strings)))))
+
+(setf *teststrings* (file-to-list "myfile.txt"))
+(first *teststrings*) ;see how this works no matter how many times you call the above command in a row (unlike usinng the let-over-lambda since that saves the var)
+
+(defun file-to-strings (path)
+  (let ((list-strings nil))
+    (with-open-file (str path :direction :input)
+      (do ((line (read-line str 'nil 'eof) (read-line str 'nil 'eof)))
+	  ((eql line 'eof) list-strings)
+	(push line list-strings)))))
+
+;;7-2
+(defun file-to-s-expressions (path)
+  (let ((list-exprs nil))
+    (with-open-file (str path :direction :input)
+      (do ((expr (read str nil nil) (read str nil nil)))
+	  ((eql expr 'eof) list-exprs) ;maybe since the last expression isn't ever 'eof we never find someting?
+	(push expr list-exprs)))))
+
+
+(defun s->lists (path)
+  (with-open-file (str path :direction :input)
+    (do ((s (read str nil nil) (read str nil nil))
+	 (acc nil (cons s acc)))
+	((not s) (nreverse acc)))))
+
+(setf *teststrings4* nil)
+;;;;(setf *teststrings4* (file-to-s-expressions "exprfile.txt")) ; but this doesn't work!! causes errors still
+*teststrings4*
+(setf *teststrings4* (s->lists "exprfile.txt")) ; see this works 
+
+
+
+					;7-3 function that takes two filenames and writes the second file a copy of the first, minus comments
 (setf *lexample* "some code here % and some comments here")
 (subseq *lexample* 0 (position #\% *lexample*))
 
 (defun remove-comments (file1 file2)
   (with-open-file (in file1 :direction :input)
     (with-open-file (out file2 :direction :output
-			       :if-exists :supersede)
+			 :if-exists :supersede)
       (do ((line (read-line in nil 'eof) (read-line in nil 'eof)))
 	  ((eql line 'eof))
 	(princ (subseq line 0 (position #\% line)) out)))))
 
-;(remove-comments "/Volumes/MEDIA/lisp/pg/commentsfile.txt" "/Volumes/MEDIA/lisp/pg/myfile1.txt")
+					;(remove-comments "/Volumes/MEDIA/lisp/pg/commentsfile.txt" "/Volumes/MEDIA/lisp/pg/myfile1.txt")
 
 (defun remove-comments2 (file1 file2)
   (with-open-file (in file1 :direction :input)
     (with-open-file (out file2 :direction :output
-			       :if-exists :supersede)
+			 :if-exists :supersede)
       (do ((line (read-line in nil 'eof) (read-line in nil 'eof)))
 	  ((eql line 'eof))
 	(format out "~A~%" (subseq line 0 (position #\% line))))))); this one adds teh new line
 
 ;;notice how this works now - prints the new line
-;(remove-comments2 "/Volumes/MEDIA/lisp/pg/commentsfile.txt" "/Volumes/MEDIA/lisp/pg/myfile1.txt")
+					;(remove-comments2 "/Volumes/MEDIA/lisp/pg/commentsfile.txt" "/Volumes/MEDIA/lisp/pg/myfile1.txt")
 
 
-;some stuff after adding it to the online git repo
-;touch README.md
-;git init
-;git add README.md ; or use "git add ." to add everything in this folder
-;git commit -m "first commit"
-;git remote add origin https://github.com/ajivani/lisp.git
-;git push -u origin master
+					;some stuff after adding it to the online git repo
+					;touch README.md
+					;git init
+					;git add README.md ; or use "git add ." to add everything in this folder
+					;git commit -m "first commit"
+					;git remote add origin https://github.com/ajivani/lisp.git
+					;git push -u origin master
 
-;Push an existing repository from the command line
-;git remote add origin https://github.com/ajivani/lisp.git
-;git push -u origin master
+					;Push an existing repository from the command line
+					;git remote add origin https://github.com/ajivani/lisp.git
+					;git push -u origin master
 
-;lets test this now
-;basically to clone we need git clone git://github.com/ajivani/lisp.git nameofgitfolder
-;then it automatically downloads stuff here!
+					;lets test this now
+					;basically to clone we need git clone git://github.com/ajivani/lisp.git nameofgitfolder
+					;then it automatically downloads stuff here!
 
 ;;7-4 - function that takes a 2d array of floats and displays it in neat columns
 
-;quick array review
+					;quick array review
 (setf 2darry (make-array '(10 4 2) :initial-element 2.718)) ;means 3d array
 (setf (aref 2darry 2 1 1) 'blue) ;see what element 
 (setf 2darry (make-array '(12 4) :initial-element 2.718))
@@ -4226,7 +4226,7 @@
 (format nil "~10,2,0,'*,F~10,2,0,,F" 123.45678901234567890 94123.7885)
 (format nil "~10,8,0,'*,F~10,10,0,,F" 123.45678901234567890 94123.788580938409324809)
 
-;use dotimes to do this -- really easy :)
+					;use dotimes to do this -- really easy :)
 (defun print-2d-array (arry)
   (let* ((dims (array-dimensions arry))
 	 (a (car dims))
@@ -4239,42 +4239,42 @@
 (print-2d-array 2darry)
 (print-2d-array 2darry2)
 
-;7-5 modify stream-subst to allow wildcards in the pattern if the char + occurs in old, it should match any input char
+					;7-5 modify stream-subst to allow wildcards in the pattern if the char + occurs in old, it should match any input char
 
 (defun stream-subst (old new in out)
-   (let* ((pos 0)
-	  (len (length old))
-	  (buf (new-buf len))
-	  (from-buf nil))
-     (do ((c (read-char in nil :eof)       ;(var initial-value update)
-	     (or (setf from-buf (buf-next buf)) 
-		 (read-char in nil :eof)))) 
-	 ((eql c :eof))                    ;stopping cond and return value
-       (cond ((or (char= c (char old pos))     ;the body and expr in cron order
-		  (char= #\+ (char old pos))) ;so if it equals 
-	      (incf pos)
-	      (cond ((= pos len)            ; 3 we have complete match and we write the replacement to output stream and 
-		     (princ new out)
-		     (setf pos 0)
-		     (buf-clear buf))
-		    ((not from-buf)         ; 2 if match begins queue into the buffer b
-		     (buf-insert c buf))))
-	     ((zerop pos)                   ; 1 until it mataches the first character write back exactly the same thing to the output file
-	      (princ c out)
-	      (when from-buf
-		(buf-pop buf)
-		(buf-reset buf)))
-	     (t                             ; 4 if it fails before this point we can pop the first char in the buffer and write it to the output stream after which we reset the the buffer and start over with pos equal to zero
-	      (unless from-buf
-		(buf-insert c buf))
-	      (princ (buf-pop buf) out)
-	      (buf-reset buf)
-	      (setf pos 0))))
-     (buf-flush buf out)))
+  (let* ((pos 0)
+	 (len (length old))
+	 (buf (new-buf len))
+	 (from-buf nil))
+    (do ((c (read-char in nil :eof)       ;(var initial-value update)
+	    (or (setf from-buf (buf-next buf)) 
+		(read-char in nil :eof)))) 
+	((eql c :eof))                    ;stopping cond and return value
+      (cond ((or (char= c (char old pos))     ;the body and expr in cron order
+		 (char= #\+ (char old pos))) ;so if it equals 
+	     (incf pos)
+	     (cond ((= pos len)            ; 3 we have complete match and we write the replacement to output stream and 
+		    (princ new out)
+		    (setf pos 0)
+		    (buf-clear buf))
+		   ((not from-buf)         ; 2 if match begins queue into the buffer b
+		    (buf-insert c buf))))
+	    ((zerop pos)                   ; 1 until it mataches the first character write back exactly the same thing to the output file
+	     (princ c out)
+	     (when from-buf
+	       (buf-pop buf)
+	       (buf-reset buf)))
+	    (t                             ; 4 if it fails before this point we can pop the first char in the buffer and write it to the output stream after which we reset the the buffer and start over with pos equal to zero
+	     (unless from-buf
+	       (buf-insert c buf))
+	     (princ (buf-pop buf) out)
+	     (buf-reset buf)
+	     (setf pos 0))))
+    (buf-flush buf out)))
 
-;7-6 modify stream-subst so the pattern can include an element that matches any digit character, an element that matches
-;any alphanumeric char, or an element that matches any char. the pattern must also be able to match any specific
-;input char (hint: old can no longer be a stringa)
+					;7-6 modify stream-subst so the pattern can include an element that matches any digit character, an element that matches
+					;any alphanumeric char, or an element that matches any char. the pattern must also be able to match any specific
+					;input char (hint: old can no longer be a stringa)
 ;;see the solution that uses labels - pg 102
 (labels ((add10 (x) (+ x 10))
 	 (consa (x) (cons 'a x)))
@@ -4285,7 +4285,7 @@
 
 ;;;;chapter 8  ch 8 chap 8 - symbols
 (symbol-name 'abc); can use symbols as names as well as data objects
-;lisp is case insensitvie
+					;lisp is case insensitvie
 (eql 'aBc 'Abc)
 (CaR '(a b c)) 
 
@@ -4310,3 +4310,21 @@
 ;;;8-3 creating symbols
 ;;packages are symbol-tables mappings (mapping names to symbols)
 ;;a symbol that belongs to a package is said to be interned in that package - functions and vars have symbols as their names
+(intern "random-symbol") ;a way to intern a symbol - string and an optional package (defualts to current package)
+
+
+					;(defpackage "MY-APPLICATION"
+					;  (:use "COMMON-LISP" "MY-UTILITIES")
+					;  (:nicknames "APP")
+					;  (:export "WIN" "LOSE" "DRAW"))
+;;Keywords
+;;symbols in the keyword package (known as keywords) - 2 unique properties
+;;always evaluate to themselves and you can refer to them anywhere as :x instead of keyword:x
+
+(defun noise (animal)
+  (case animal
+    (:dog :woof)
+    (:cat :meow)
+    (keyword:pig :oink))) ;see how 
+
+;;symbols related to vars 2 ways - symb name of a special var, the value of the variable is stored in a field within the sybmol itself liek the (figure 8.1 drawing)
