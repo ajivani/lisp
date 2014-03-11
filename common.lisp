@@ -1,1278 +1,1278 @@
-;Ansi common lisp  
-;;'y 'x '(and (integerp x) (zerop (mod x 2))))
-;(trace function-name)
-;all lisp expressions are atoms or 
-(defun l-f ()
-  (load "./common.lisp")) ;'common.lisp))
-(defun l-cf ()
-  (load (compile-file 'common.lisp)))
+ ;Ansi common lisp  
+ ;;'y 'x '(and (integerp x) (zerop (mod x 2))))
+ ;(trace function-name)
+ ;all lisp expressions are atoms or 
+ (defun l-f ()
+   (load "./common.lisp")) ;'common.lisp))
+ (defun l-cf ()
+   (load (compile-file 'common.lisp)))
 
-;EVALUATION RULE
-(+ 3 2)
-;+ is a function call
-;args evaluated left to right and values are passed to the function! 
+ ;EVALUATION RULE
+ (+ 3 2)
+ ;+ is a function call
+ ;args evaluated left to right and values are passed to the function! 
 
-;quote doesn't follow the evaluation rule
-;QUOTE RULE -- do nothing
-(quote (+ 3 5))
-'(+ 3 5) ; => (+ 3 5) ie it gives the same thing back
-;protects expressions from evaluation
+ ;quote doesn't follow the evaluation rule
+ ;QUOTE RULE -- do nothing
+ (quote (+ 3 5))
+ '(+ 3 5) ; => (+ 3 5) ie it gives the same thing back
+ ;protects expressions from evaluation
 
-;data
-;string "blah"
-;integer 1
-;symbol 'blah  -- actually this is pointer to a hash table
-;list '(1 a 3) -- this is a fundemental data type
-
-
-;lists are zero or more elements (made up of atoms even?) in parantheses.
-'(my 3 "Sons")
-'(the list (a b c) has 3 elements) ;one quote protects the entire list
-;but using the list function turns things into lists
-(list 'my (+ 2 1) "Sons" 'meow)
-;lisp programs are expresse as lists! means that because they're lists themselves, we can generate code that genereates code...check out the lisp parse tree
-(list '(+ 2 1) (+ 2 1))
-
-(cons 'a '(b c d))
- ;(print (cons '(a b) '(b c d)))
- ;this makes the same thing as cons
- ;(print (list 'a 'b))
-
- ;(print (list '(a b) '(c d))); => this gives the  '( (a b) (c d) )
- ;car is the first element in the list
- ;cdr returns the rest of the list
- (third '(a b c d))
-
- ;listp checks to see if it's a list
- (listp 29) ; nil
- (listp '(1 2 3)) ; T
-
- (null nil) ; T
- (not nil) ; T
-
- ;if first statement then second statemnt else last statment
- (if (listp '(a b c))
-     (print (+ 1 2))
-     (print (+ 5 6)))
-
- (if (listp ())
-     (print (+ 1 2))
-     (print (+ 5 10)))
- ;if all arguments are true then it will evaluate the next one otherwise is stops
- (and t (+ 1 2)) ; => 3
- (and () (+ 1 2)) ; => () ;stops evaluating the rest of the args
- ;or does the opposite it returns the true argument
- (or (+ 1 2) t); 3
- (or t (+ 1 2)) ; t 
- ;takes a name, a list of parameters, one or more expressions that make up the body of the function 
- (defun our-third (x)
-   (car (cdr (cdr x))))
- ;symbols are variable names, that exist as objects;
- ;lists have to be quoted or else they're treaded as CODE
- ;symbols have to be quoted or else they'll be treated as variables!!
-
- ;no distinction between program, procedure and a function
- (defun sum-greater (x y z)
-   (> (+ x y) z))
-
- ;tests if an element in a function is a list
- (defun our-member (obj lst)
-   (if (null lst)
-       nil
-       (if (eql (car lst) obj)
-	   lst
-	   (our-member obj (cdr lst)))))
-
- (defun our-member (obj lat)
-   (cond
-     ((null lat) nil)
-     ((eql obj (car lat))
-      lat)
-     (t (our-member obj
-		    (cdr lat)))))
- ; ~A is a place holder in order, and ~% is the new line character
- (format t "~A plus ~A equals ~A. ~%" 2 3 (+ 2 3))
- ;read is a cool function and it's a parser all in one
- (defun askem (string)
-   (format t "~A" string)
-   (read))
- ;(defun askem "How old are you? ")
- ;notice how this returned the object 19 if we entered it with 19
- ;NO SIDE EFFECTS!!!!!
-
- ;let makes local variables!!
- ;;let makes local variables!!!!!! 
- (let ((x 1) (y 2))
-   (+ x y))
-
- (defun ask-number()
-   (format t "Please enter a number. ")
-   (let ((val (read)))
-     (if (numberp val)
-	 val
-	 (ask-number))))
- (defun ask-number2()
-   (format t "Please enter a number. ")
-   (let ((val (read)))
-     (cond
-       ((numberp val) val)
-       (t
-	 (ask-number2)))))
-
- ;make a global variable by givina a symbol and a value to a defparameter
- (defparameter *glob* 99)
- ;another way to make a global constant
- ;(defconstant limit (+ *glob* 1)) ;assigns the value of (+ *glob* 1) to limit
- (setf *glob* 98)
- (format t "using setf, the value is: ~A" (let ((n 10))
-   (setf n 2)
-   n))
-
- ;if x is not a local variable it'll be become a global variable
- (setf x (list 'a 'b 'c))
- (setf x (list 'a 'b 'c '(a b c)))
-
- ;see how it replaces stuff
- ;first arg can also be a var name 
- (setf (car x) 'n) ; x = '(n a b c (a b c))
- (setf (cadddr x) 'z) ; x = '(n b c z)
-
- ;the following also works as three separate calls to setf 
- (setf (car x) 'changed
-       (cadr x) 'lols)
- ;(setf a b
- ;      c d
- ;      e f)
-
- (setf lst '(c a r a t))
- ;functional
- (remove 'a lst) ; returns '(c a t) but doesn't modify the lst varialbe
- ;side effect!
- (setf x (remove 'a lst))
-
- ;use iteration to generate some sort of table
- (defun show-squares (start end)
-   (do ((i start (1+ i))) ;first arg to do - (variable initial update)
-       ((> i end) 'done)  ;second arg to do - (stopping-cond return-value)
-     (format t "~A ~A~%" i (* i i)))) ;third arg to the do macro -- the body and expressed in cron order
- ;first arg
- ;initial value ofa  varialbe and how it will increment
- ;do is uesed for iteration ((symbol initial update)
- ;                          (x 0 (1+ x))
- ;creates variables (var initial update)
- ;second arg:
- ;list with one ore more expressions
- ;which tell when it should stop (var > end) in our case, and the rest of the expressions will be evaluated once the first one stops
-
- ;recursive version of show-squares
- (defun show-squares (i end)
-   (if (> i end)
-       'done
-       (progn ;progn takes a list of statments and executes them in order
-	 (format t "~A ~A~%" i (* i i))
-	 (show-squares (1+ i) end))))
- ;;examples of progn
- ;      (progn
- ;        (print "lol")
- ;        (print "line 2")
- ;        (print "third line")))))
-
- (defun show-squares (i end)
-   (cond
-     ((> i end) 'done)
-     (t
-       (format t "~A ~A~%" i (* i i))
-       (show-squares (1+ i) end))))
-
- ;return lenght of a list using dolist
- (defun our-length (lst)
-   (let ((len 0))
-     (dolist (obj lst) ;for each obj in lst do some shit
-       (setf len (1+ len)))
-     len))
-
- (defun our-length (lst)
-   (cond 
-     ((null lst) 0)
-     (t
-       (+ 1 (our-length (cdr lst))))))
-
- ;funtions are regular objects
- ;if we give the name of a function to FUNCTION, it will return the associated ojbect
- (function +)
- ;sharp quote is the same thing
- #'+ ;this is like the ' and quote() functions it's an abbreviation for (function) ; it also returns the same + object
- (funcall #'+ 2 3) ; => 5
- (funcall (function +) 2 3) ; => 5
-
- ;we can pass a function as an argument like we can pass anything else
- (apply #'+ '(1 2 3)) ;takes any arg as long as the last one is a list
- (funcall #'+ 1 2 3) ;doesn't take a list takes separate args
- ;(apply #'1+ '(1 2 3))
- (apply #'eql '(1 2))
-
- ;apply takes a function and list of arguments and then it returns the result
- ;of applying the function to it's arguments
- ;so bascially like funcall which takes just arguments not in a list. apply can can take the arguments that are in the list to the function
-
- (funcall #'+ 1 2 3); see how the last arg doesn't need to be list
- (apply #'+ 1 2 '(1 2 3)) ;see how the last arg must be a list
- (funcall #'list 'a 'v)
- (apply #'list '(a v))
- (apply #'list 'a '(a v))
+ ;data
+ ;string "blah"
+ ;integer 1
+ ;symbol 'blah  -- actually this is pointer to a hash table
+ ;list '(1 a 3) -- this is a fundemental data type
 
 
- ;lambda is a symbol!!!!
- ;functions use to be represented internally as lists in earlier dialects of lisp. and the only way to tell a function
- ;from a list int that case was to check if the first element in the list was the symbol lambda. ie 'lambda
- ;in common lisp functions can be expressed as lists but they are represtened internally as distinct functjion objects.
- ;so lambda is technically no longer really necessary.
- ;((x) (+ x 100))
- ;is the same as
- ;(lambda (x)
- ; (+ x 100))
- ;both should be returning a function
- (lambda (x y)
-   (+ x y))
- ;try
- ((lambda (x y) (+ x y)) 2 3); => 5 will add 2 and 3 together
- ((lambda (x) (+ x 100)) 1) ;=> 101 will return 1
- ;or the same thing using sharp quote
- (funcall #'(lambda (x) (+ x 100)) ;use functions without naming them
-	  3)
- ;values have types, not variables
- ;manifest typing - every object has a label identifiying its type
- (typep 27 'integer) ;=> returns true 
- (typep nil t); => t; t is the supertype to everything including nil!!!
- ;chap 1 exercises
- ;(+ (- 5 1) (+ 7 3)) ;=> 14
- (list 1 (+ 2 3)) ;  '(1 5)
- (if (listp 1) (+ 1 2) (+ 3 4)) ; 7
- (list (and (listp 3) t) (+ 1 2)) ; (T 3) WRONG IT'S (nil 3)
- (list (or (listp 3) t) (+ 1 2)) ;(T 3) right
- ;three distinct cons expressons that return (a b c)
- (cons 'a (cons 'b (cons 'c nil))) ; right
- (cons 'a (cons 'b (list 'c)))
- (cons 'a '(b c)) ;right 
- (cons 'a (cons 'b '(c))) ;right
- ;function that takes two parameters and reutns the greater of the tow
- (defun ex-1-4 (x y)
-   (if (> x y) x y))
- ;now with style
- (funcall #'(lambda (x y) (if (> x y) x y))
-	  1
-	  2) ;=> should return 2
- ;what does this do
- (defun enigma (x) ;say '()
-   (and (not (null x)) ;then it returns nil. on empty list it will return nil
-	(or (null (car x)) ;returns true if there are any nils in the list
-	    (enigma (cdr x)))))
- ;enigma tells us if there are any nils
+ ;lists are zero or more elements (made up of atoms even?) in parantheses.
+ '(my 3 "Sons")
+ '(the list (a b c) has 3 elements) ;one quote protects the entire list
+ ;but using the list function turns things into lists
+ (list 'my (+ 2 1) "Sons" 'meow)
+ ;lisp programs are expresse as lists! means that because they're lists themselves, we can generate code that genereates code...check out the lisp parse tree
+ (list '(+ 2 1) (+ 2 1))
 
+ (cons 'a '(b c d))
+  ;(print (cons '(a b) '(b c d)))
+  ;this makes the same thing as cons
+  ;(print (list 'a 'b))
 
- ;x is the stopping condition
- ;shows the number of elements in the list before the stopping element x shows up)
- (defun mystery (x y)
-   (if (null y) 
-       nil
-       (if (eql (car y) x)
-	   0
-	   (let ((z (mystery x (cdr y))))
-	     (and z (+ z 1)))))) ;ZERO DOES NOT EQUAL NIL!!!!!!!!!!! REMEWMBER SO (and 0 1) ===> 1 NOT ZERO as i expected
- ;also (or 0 1) returns 0 which is just strange
- ;actually it makes perfect sense!
- ;(and 0 1 2 3 4 29 3) will evaluate all the arguments that are true!!! so the last arguemnt it evaluates is 3 which is not nil so it works!
- ;(or 0 1 2 3 3919 3 3 43) will return 0 because it's the first non nil argument in list it has to process
+  ;(print (list '(a b) '(c d))); => this gives the  '( (a b) (c d) )
+  ;car is the first element in the list
+  ;cdr returns the rest of the list
+  (third '(a b c d))
 
- ;1-6
- (car (car (cdr '(a (b c) d)))) ;=>b 
- (or 13 (/ 1 0)) ;this won't mess up because the first expression evalutes to not nil so the second one never is called
- (funcall #'list 1 nil)
- ;1-7
- (defun one-arg-a-list (lst)
-   (cond
-     ((null lst) 'nil)
-     ((listp (car lst)) t)
-     (t
-       (one-arg-a-list (cdr lst)))))
- (defun one-arg-a-list (l)
-   (if (null l)
-       nil
-       (if (listp (car l))
-	   t
-	   (one-arg-a-list (cdr l)))))
- (defun num-x-in-lst (a l)
-   (cond 
-     ((null l) 0)
-     ((eq (car l) a)
-      (1+ (num-x-in-lst a (cdr l))))
-     (t
-       (num-x-in-lst a (cdr l)))))
+  ;listp checks to see if it's a list
+  (listp 29) ; nil
+  (listp '(1 2 3)) ; T
 
- ;;this version works because lisp is all about functional programming so that in the first one lst isn't
- ;;actaully effected by the first remove call so when you apply it to nothing it does nothing
- (defun summit (lst)
-   (apply #'+ (remove nil lst)))
+  (null nil) ; T
+  (not nil) ; T
 
- ;my version of summit
- (defun my-summit2 (lst)
-   (cond
-     ((null lst) 0)
-     ((null (car lst))
-      (my-summit2 (cdr lst)))
-     (t
-       (+ (car lst)
-	  (my-summit2 (cdr lst))))))
+  ;if first statement then second statemnt else last statment
+  (if (listp '(a b c))
+      (print (+ 1 2))
+      (print (+ 5 6)))
 
- ;pg version
- (defun summit (lst)
-   (if (null lst)
-       0
-       (let ((x (car lst)))
-	 (if (null x)
-	     (summit (cdr lst))
-	     (+ x (summit (cdr lst)))))))
+  (if (listp ())
+      (print (+ 1 2))
+      (print (+ 5 10)))
+  ;if all arguments are true then it will evaluate the next one otherwise is stops
+  (and t (+ 1 2)) ; => 3
+  (and () (+ 1 2)) ; => () ;stops evaluating the rest of the args
+  ;or does the opposite it returns the true argument
+  (or (+ 1 2) t); 3
+  (or t (+ 1 2)) ; t 
+  ;takes a name, a list of parameters, one or more expressions that make up the body of the function 
+  (defun our-third (x)
+    (car (cdr (cdr x))))
+  ;symbols are variable names, that exist as objects;
+  ;lists have to be quoted or else they're treaded as CODE
+  ;symbols have to be quoted or else they'll be treated as variables!!
 
- ;chapter 3
- ;(setf x (cons 'a nil))
- ;(setf y (list 'a 'b 'c))
- ;(setf z (list 'a (list 'b 'c) 'd))
- (defun our-listp (x)
-   (or (null x) (consp x))) ;consp returns true if cons is a list!
- ;everything in a list that's not an atom is a list
- (defun our-atom (x)
-   (not (consp x))) ;try this with nil it's both an atom and a list!!!
+  ;no distinction between program, procedure and a function
+  (defun sum-greater (x y z)
+    (> (+ x y) z))
 
- (eql (cons 'a nil) (cons 'a nil)); => nil becuse they're distinct objects in memory ;but equalp would work
-
- (defun our-equal (x y)
-   (or (eql x y)
-       (and (consp x)
-	    (consp y)
-	    (our-equal (car x) (car y))
-	    (our-equal (cdr x) (cdr y)))))
- ;NOTE
- ;variables have values in the same way as lists have elements
- ;(setf x '(a b c))
- ;(setf y x)
- ;(eql x y) ;=> T becuse they point to the same thing
- ;(setf x (remove 'a x))
- ;(eql x y) ;=> false no longer point to the same thing
- (setf x '(a b c)
-       y (copy-list x))
- (eql x y) ;-> nil (looks like a picture of a double bus pointing to the same values)
- ;new bus with the same passengers
-
- (defun our-copy-list (lst)
-   (if (atom lst)
-       lst ;will happen in the last element or will happen if there is only one element
-       (cons (car lst)
-	 (our-copy-list (cdr lst)))))
-
- ;append is the conatenation of any number of lists
- (append '(a b) '(c d) '(e))
-
- ;Notice
- (consp nil) ;NIL
- (listp nil) ;T
- ;do some run-length-encoding
- (defun compress (x)
-   (if (consp x) ;is x a member of a list
-       (compr (car x) 1 (cdr x))
-       x))
- (defun compr (elem n lst)
-   (if (null lst)
-       (list (n-elts elem n))
-       (let ((next (car lst))) ;else 
-	 (if (eql next elem)
-	     (compr elem (+ n 1) (cdr lst))
-	     (cons (n-elts elem n)
-		   (compr next 1 (cdr lst)))))))
- ;returns the number of times a an element appeared as a list
- ;ed (3 SOUP) ;3 == n AND elem = SOUP
- (defun n-elts (elem n)
-   (if (> n 1)
-       (list n elem)
-       elem))
- ;use
- (print (compress '(soup soup milk tea tea tea salad chicken salad salad)))
-
- ;practice
- ;(defun compr (elem n lst)
- ;  (cond
- ;    ((null lst)
- ;     (list (n-elts elem n))) ;the function will always return a list
- ;    ((eql elem (car lst)) ;elem is current element we're looking at, (car lst) is the next eleemnt we're comparing it to.
- ;     (compr elem (1+ n) (cdr lst)))
- ;    (t
- ;      (cons (n-elts elem n)
- ;        (compr (car lst) 1 (cdr lst))))))
-
- ;should be the same as above
- ;(print (compress '(soup soup milk tea tea tea salad chicken salad salad)))
-
- ;practice using let
- ;(defun compr (elem n lst)
- ;  (cond
- ;    ((null lst)
- ;      (list (n-elts elem n)))
- ;    (t
- ;      (let ((next (car lst)))
- ;        (cond
- ;          ((eql next elem)
- ;           (compr elem (1+ n) (cdr lst)))
- ;          (t
- ;            (cons (n-elts elem n)
- ;              (compr next 1 (cdr lst)))))))))
-
- ;(print (compress '(soup soup milk tea tea tea salad chicken salad salad)))
-
- ;eg (list-of 3 'soup)
- ;(SOUP SOUP SOUP)
- (defun list-of (n elem)
-   (if (zerop n)
-       nil
-       (cons elem (list-of (1- n) elem))))
-
- (defun uncompress (lst)
-   (if (null lst)
-       nil
-       (let ((elem (car lst))
-	     (the-rest (uncompress (cdr lst))))
-	 (if (consp elem)
-	     (append (apply #'list-of elem) ;see we use apply becuase we know that (4 SOUP) is what elem is. apply takes a list of args and then passes them in one at a time to the function that needs them! 
-		     the-rest)
-	     (cons elem the-rest)))))
-
- (uncompress '((3 soup) chicken (2 pie)))
- ;get element at nth position
- (nth 0 '(a b c)) ; => 'A
- ;get nth cdr call this
- (nthcdr 2 '(a b c)); => '(C)
-
- (defun our-nthchdr (n lst)
-   (if (zerop n)
-       lst
-       (our-nthchdr (1- n) (cdr lst))))
-
- (last '(a b c)) ;=> (C) not 'C 
-
- ;takes a functiona nd applies it every member of the list
- ;returns the list of the results of doing such thing
- (print (mapcar #'(lambda (x) (+ x 10))
-		'(1 2 3))) ;-> (11 12 13)
-
- ;applies list to both lists until one is empty
- (print (mapcar #'list
-		'(a b c d e f g)
-		'(1 2 3))) ;=> ((a 1) (b 2) (c 3))
- (mapcar #'(lambda (x) x)
-	 '(a b c)) ;=> '(A B C) returns itself 
- (mapcar (function (lambda (x) x)) '(a b c)) ;function and #' do the same thing 
- ;trees
- ;lets take (a (b c) d)
- ;function copy-tree takes a tree and returns a copy of it like so
- (defun our-copy-tree (tr)
-   (if (atom tr)
-       tr ;if it's an atom we want it's value
-       (cons (our-copy-tree (car tr)) ;so it's not an atom so we want it's left side value
-	     (our-copy-tree (cdr tr))))) ;as well as we want the right side value
- ;(and (integerp x) (zerop (mod x 2)))
- (substitute 'y 'x '(and (integerp x) (zerop (mod x 2)))) ; will return list as is! no change! because it sees 3 elements that are not x => 'and '(integerp x) '(zerop (mod x 2))
- ;but subst goes along the car and cdr of the tree
- (subst 'y 'x '(and (integerp x) (zerop (mod x 2))))
- (defun our-subst (new old tree)
-   (if (eql tree old)
-       new
-       (if (atom tree) ;NIL IS AN ATOM! 
-	   tree
-	   (cons (our-subst new old (car tree))
-		 (our-subst new old (cdr tree))))))
-
- (defun our-subst2 (new old tree)
-   (cond
-     ((null tree) nil) ;nil is an atom
-     ((atom tree)
-      (cond
-	((eql tree old)
-	 new)
-	(t
-	  tree)))
-     (t
-       (cons (our-subst2 new old (car tree))
-	     (our-subst2 new old (cdr tree))))))
- ;use
- (our-subst 'y 'x '(and (integerp x) (zerop (mod x 2))))
- (our-subst 'y 'x '(and (integerp x) (zerop (mod x a b x (x a d d x (((x)))) 3 2))))
- (our-subst2 'y 'x '(and (integerp x) (zerop (mod x a b x (x a d d x (((x)))) 3 2))))
-
- ;see how all base cases are covered
- ;works for n = 0 and for n+1
- (defun our-len(lst)
-   (if (null lst)
-       0
-       (1+ (our-len (cdr lst)))))
-
- ;compares by using eql
- (member 'b '(a b c)) ; => (B C) not just t it returns a list otherise it returns nil
- ;:test that function will be used to test 
- (member '(a) '((b) (a b) (a) (z)) :test #'equal) ;this will return true since (equal '(a) '(a)) => true
- (member '(a) '((b) (a b) (a) (z)) :test #'eql) ;the default test operator will return nil since (eql '(a) '(a)) => NIL
- ;:key specifies the function to be applied to each element before comparison
- (member 'a '((x y) (b a) (1 2)) :key #'car)  ; nil! since
- (member 'a '((x y) (b a) (1 2)) :key #'cadr) ;((B A) (1 2))
- (member 'b '((x y) (b a) (1 2)) :key #'car)
- ;order doesn't matter
- (member 2 '((1) (2)) :key #'car :test #'equal)
- (member 2 '((1) (2)) :test #'equal :key #'car)
-
- (member-if #'oddp '(2 3 4 5)) ;=> (3 4 5)
- (member-if #'evenp '( 1 2 3 4 5)) ;-> (2 3 4 5)
-
- (defun our-member-if (fn lst)
-   (and (consp lst)
-	(if (funcall fn (car lst))
+  ;tests if an element in a function is a list
+  (defun our-member (obj lst)
+    (if (null lst)
+	nil
+	(if (eql (car lst) obj)
 	    lst
-	    (our-member-if fn (cdr lst)))))
+	    (our-member obj (cdr lst)))))
 
- ;use
- (our-member-if 'oddp '( 2 3 4 5))
+  (defun our-member (obj lat)
+    (cond
+      ((null lat) nil)
+      ((eql obj (car lat))
+       lat)
+      (t (our-member obj
+		     (cdr lat)))))
+  ; ~A is a place holder in order, and ~% is the new line character
+  (format t "~A plus ~A equals ~A. ~%" 2 3 (+ 2 3))
+  ;read is a cool function and it's a parser all in one
+  (defun askem (string)
+    (format t "~A" string)
+    (read))
+  ;(defun askem "How old are you? ")
+  ;notice how this returned the object 19 if we entered it with 19
+  ;NO SIDE EFFECTS!!!!!
 
- ;it ajoins only if it's not already in the list
- ;and takes ame keyword args as member
- (adjoin 'b '(a b c)) ;=> (a b c)
- (adjoin 'z '(a b c)) ; => (z a b c)
+  ;let makes local variables!!
+  ;;let makes local variables!!!!!! 
+  (let ((x 1) (y 2))
+    (+ x y))
 
- (union '(a b c) '(c b s)) ;(a b c s) ;not in that order either playa
- (intersection '(a b c) '(b b c)) ;=> ( c b) ;no order preservation
- (set-difference '(a b c d e) '(b e)) ;=> (c d a) 
+  (defun ask-number()
+    (format t "Please enter a number. ")
+    (let ((val (read)))
+      (if (numberp val)
+	  val
+	  (ask-number))))
+  (defun ask-number2()
+    (format t "Please enter a number. ")
+    (let ((val (read)))
+      (cond
+	((numberp val) val)
+	(t
+	  (ask-number2)))))
 
- ;sequences - lists and vectors
- (length '(a b c)) ;3
- (subseq '(a b c d) 1 2); (b c)
- (subseq '(a b c d) 1) ; (b c d)
+  ;make a global variable by givina a symbol and a value to a defparameter
+  (defparameter *glob* 99)
+  ;another way to make a global constant
+  ;(defconstant limit (+ *glob* 1)) ;assigns the value of (+ *glob* 1) to limit
+  (setf *glob* 98)
+  (format t "using setf, the value is: ~A" (let ((n 10))
+    (setf n 2)
+    n))
 
- (defun mirror? (s)
-   (let ((len (length s)))
-     (and (evenp len)
-	  (let ((mid (/ len 2)))
-	    (equal (subseq s 0 mid) ;(starts from 0 and goes to mid)
-		   (reverse (subseq s mid))))))) ;starts from mid and goes to the other side
+  ;if x is not a local variable it'll be become a global variable
+  (setf x (list 'a 'b 'c))
+  (setf x (list 'a 'b 'c '(a b c)))
 
- (defun mirror2? (s)
-   (and (evenp (length s))
-	(equal (reverse s) s)))
- ;can also take a key
- (sort '( 0 2 1 3 8) #'>)
- (sort '( 0 2 1 3 8) #'<)
+  ;see how it replaces stuff
+  ;first arg can also be a var name 
+  (setf (car x) 'n) ; x = '(n a b c (a b c))
+  (setf (cadddr x) 'z) ; x = '(n b c z)
 
- ;if lst is a list of tuples it can sort the list and return 
- (defun nthmost (n lst)
-   (nth (1- n)
-	(sort (copy-list lst) #'>)))
- (nthmost 2 '(0 2 1 3 8)) ;(8 3 2 1 0) a and picks the second one
+  ;the following also works as three separate calls to setf 
+  (setf (car x) 'changed
+	(cadr x) 'lols)
+  ;(setf a b
+  ;      c d
+  ;      e f)
 
- (every #'oddp '(1 3 5)) ; T
- (some  #'evenp '(1 3 5 2)); T
+  (setf lst '(c a r a t))
+  ;functional
+  (remove 'a lst) ; returns '(c a t) but doesn't modify the lst varialbe
+  ;side effect!
+  (setf x (remove 'a lst))
 
- (every #'> '(1 3 5)
-	    '(0 2 4 1)); like the mapcar pics the shortest list to work through with the corresponding other list 
- ;push and pull are macros
- ;use
- (setf xpush '(b))
- (push 'a xpush)
- (pop xpush)
+  ;use iteration to generate some sort of table
+  (defun show-squares (start end)
+    (do ((i start (1+ i))) ;first arg to do - (variable initial update)
+	((> i end) 'done)  ;second arg to do - (stopping-cond return-value)
+      (format t "~A ~A~%" i (* i i)))) ;third arg to the do macro -- the body and expressed in cron order
+  ;first arg
+  ;initial value ofa  varialbe and how it will increment
+  ;do is uesed for iteration ((symbol initial update)
+  ;                          (x 0 (1+ x))
+  ;creates variables (var initial update)
+  ;second arg:
+  ;list with one ore more expressions
+  ;which tell when it should stop (var > end) in our case, and the rest of the expressions will be evaluated once the first one stops
 
- ;use push to determine an itertive version of reverse for lists
- ;see dolist is like  an iterator for a list
- (defun our-reverse (lst)
-   (let ((acc nil))
-     (dolist (elem lst) ;for each element in the list
-       (push elem acc))
-     acc))
- ;use
- (our-reverse '(1 2 3 a blah b))
+  ;recursive version of show-squares
+  (defun show-squares (i end)
+    (if (> i end)
+	'done
+	(progn ;progn takes a list of statments and executes them in order
+	  (format t "~A ~A~%" i (* i i))
+	  (show-squares (1+ i) end))))
+  ;;examples of progn
+  ;      (progn
+  ;        (print "lol")
+  ;        (print "line 2")
+  ;        (print "third line")))))
 
- ;pushnew uses adjoin
- (let ((x '(a b)))
-   (pushnew 'c x)
-   (pushnew 'a x)
-   x)
+  (defun show-squares (i end)
+    (cond
+      ((> i end) 'done)
+      (t
+	(format t "~A ~A~%" i (* i i))
+	(show-squares (1+ i) end))))
 
- ;proper lists end in a null
- ;wont work for a list of nil
- ;messes up for circular lists
- (defun proper-list? (x)
-   (or (null x)
-       (and (consp x)
-	    (proper-list? (cdr x)))))
- ;use
- (consp (cons 'a 'b)) ;T
- (consp (cdr (cons 'a nil))); T
- (consp (cdr (cons 'a 'b))) ;NIL see how in this case the proper list doesn't end with a null that's all there
- ;is to a proper list
- (consp (cdr (cons nil nil))) ;NIL
- (setf pair (cons 'a 'b))
- (proper-list? pair) ;NIL
- (proper-list? (cons pair nil)) ; ((A.B) . nil) => ((A.B)) => true
+  ;return lenght of a list using dolist
+  (defun our-length (lst)
+    (let ((len 0))
+      (dolist (obj lst) ;for each obj in lst do some shit
+	(setf len (1+ len)))
+      len))
 
- ;returns the same thing
- '(a . (b . (c . nil)))
- (cons 'a (cons 'b (cons 'c 'd)))
+  (defun our-length (lst)
+    (cond 
+      ((null lst) 0)
+      (t
+	(+ 1 (our-length (cdr lst))))))
 
- ;many ways to define this
- ;just dot notation
- '(a b)
- '(a . (b . nil))
- '(a . (b))
- '(a b . nil)
+  ;funtions are regular objects
+  ;if we give the name of a function to FUNCTION, it will return the associated ojbect
+  (function +)
+  ;sharp quote is the same thing
+  #'+ ;this is like the ' and quote() functions it's an abbreviation for (function) ; it also returns the same + object
+  (funcall #'+ 2 3) ; => 5
+  (funcall (function +) 2 3) ; => 5
 
- ;a-lists a-list assoc-lists
- (setf trans '((+ . "add") (- . "subtract")))
- (assoc '+ trans)
- (assoc '- trans)
- (assoc '* trans)
+  ;we can pass a function as an argument like we can pass anything else
+  (apply #'+ '(1 2 3)) ;takes any arg as long as the last one is a list
+  (funcall #'+ 1 2 3) ;doesn't take a list takes separate args
+  ;(apply #'1+ '(1 2 3))
+  (apply #'eql '(1 2))
 
- ;our version of assoc list
- (defun our-assoc (key alist)
-   (and (consp alist)
-	(let ((pair (car alist)))
-	  (if (eql key (car pair))
-	      pair
-	      (our-assoc key (cdr alist))))))
+  ;apply takes a function and list of arguments and then it returns the result
+  ;of applying the function to it's arguments
+  ;so bascially like funcall which takes just arguments not in a list. apply can can take the arguments that are in the list to the function
+
+  (funcall #'+ 1 2 3); see how the last arg doesn't need to be list
+  (apply #'+ 1 2 '(1 2 3)) ;see how the last arg must be a list
+  (funcall #'list 'a 'v)
+  (apply #'list '(a v))
+  (apply #'list 'a '(a v))
 
 
- ;find the shortest path in a network
- (setf min '((a b c) (b c) (c d)))
- (assoc 'a min) ; (a b c)
- ;so for the node a it'll give you all the nodes that touch it
- (cdr (assoc 'a min)) ;(b c)
+  ;lambda is a symbol!!!!
+  ;functions use to be represented internally as lists in earlier dialects of lisp. and the only way to tell a function
+  ;from a list int that case was to check if the first element in the list was the symbol lambda. ie 'lambda
+  ;in common lisp functions can be expressed as lists but they are represtened internally as distinct functjion objects.
+  ;so lambda is technically no longer really necessary.
+  ;((x) (+ x 100))
+  ;is the same as
+  ;(lambda (x)
+  ; (+ x 100))
+  ;both should be returning a function
+  (lambda (x y)
+    (+ x y))
+  ;try
+  ((lambda (x y) (+ x y)) 2 3); => 5 will add 2 and 3 together
+  ((lambda (x) (+ x 100)) 1) ;=> 101 will return 1
+  ;or the same thing using sharp quote
+  (funcall #'(lambda (x) (+ x 100)) ;use functions without naming them
+	   3)
+  ;values have types, not variables
+  ;manifest typing - every object has a label identifiying its type
+  (typep 27 'integer) ;=> returns true 
+  (typep nil t); => t; t is the supertype to everything including nil!!!
+  ;chap 1 exercises
+  ;(+ (- 5 1) (+ 7 3)) ;=> 14
+  (list 1 (+ 2 3)) ;  '(1 5)
+  (if (listp 1) (+ 1 2) (+ 3 4)) ; 7
+  (list (and (listp 3) t) (+ 1 2)) ; (T 3) WRONG IT'S (nil 3)
+  (list (or (listp 3) t) (+ 1 2)) ;(T 3) right
+  ;three distinct cons expressons that return (a b c)
+  (cons 'a (cons 'b (cons 'c nil))) ; right
+  (cons 'a (cons 'b (list 'c)))
+  (cons 'a '(b c)) ;right 
+  (cons 'a (cons 'b '(c))) ;right
+  ;function that takes two parameters and reutns the greater of the tow
+  (defun ex-1-4 (x y)
+    (if (> x y) x y))
+  ;now with style
+  (funcall #'(lambda (x y) (if (> x y) x y))
+	   1
+	   2) ;=> should return 2
+  ;what does this do
+  (defun enigma (x) ;say '()
+    (and (not (null x)) ;then it returns nil. on empty list it will return nil
+	 (or (null (car x)) ;returns true if there are any nils in the list
+	     (enigma (cdr x)))))
+  ;enigma tells us if there are any nils
 
- ;(defun shortest-path (start end net)
- ;  (bfs end (list (list start)) net))
 
- ;;one that does the searching
- ;(defun bfs (end queue net)
- ;  (if (null queue)
- ;      nil
- ;      (let ((path (car queue))) ;say (a) for example
- ;        (let ((node (car path))) ;say a for example
- ;          (if (eql node end)
- ;              (reverse path) ;
- ;              (bfs end
- ;                   (append (cdr queue) ;keep adding to the end of the end of the queue
- ;                           (new-paths path node net))
- ;                   net))))))
+  ;x is the stopping condition
+  ;shows the number of elements in the list before the stopping element x shows up)
+  (defun mystery (x y)
+    (if (null y) 
+	nil
+	(if (eql (car y) x)
+	    0
+	    (let ((z (mystery x (cdr y))))
+	      (and z (+ z 1)))))) ;ZERO DOES NOT EQUAL NIL!!!!!!!!!!! REMEWMBER SO (and 0 1) ===> 1 NOT ZERO as i expected
+  ;also (or 0 1) returns 0 which is just strange
+  ;actually it makes perfect sense!
+  ;(and 0 1 2 3 4 29 3) will evaluate all the arguments that are true!!! so the last arguemnt it evaluates is 3 which is not nil so it works!
+  ;(or 0 1 2 3 3919 3 3 43) will return 0 because it's the first non nil argument in list it has to process
 
- ;so it takes the current path and the node alont with the network
- ;finds the node and the path to get to that place and returns it
- ;if the path (b c) - node 'a - net ((a b c) (b c) (c d))
- ;(cons '(b c) '())
- ;(defun new-paths (path node net)
- ;  (mapcar #'(lambda (n)
- ;              (cons n path)) ;will give you a list of n along with the rest of the path 
- ;          (cdr (assoc node net))));the nodes associaded
+  ;1-6
+  (car (car (cdr '(a (b c) d)))) ;=>b 
+  (or 13 (/ 1 0)) ;this won't mess up because the first expression evalutes to not nil so the second one never is called
+  (funcall #'list 1 nil)
+  ;1-7
+  (defun one-arg-a-list (lst)
+    (cond
+      ((null lst) 'nil)
+      ((listp (car lst)) t)
+      (t
+	(one-arg-a-list (cdr lst)))))
+  (defun one-arg-a-list (l)
+    (if (null l)
+	nil
+	(if (listp (car l))
+	    t
+	    (one-arg-a-list (cdr l)))))
+  (defun num-x-in-lst (a l)
+    (cond 
+      ((null l) 0)
+      ((eq (car l) a)
+       (1+ (num-x-in-lst a (cdr l))))
+      (t
+	(num-x-in-lst a (cdr l)))))
 
- ;breadth-first
- ;'a 'd ((a b c) (b c) (c d))
- (defun shortest-path (start end net)
-   (bfs end (list (list start)) net)) ; 'D ((A)) ((A B C) (B C) (C D))
+  ;;this version works because lisp is all about functional programming so that in the first one lst isn't
+  ;;actaully effected by the first remove call so when you apply it to nothing it does nothing
+  (defun summit (lst)
+    (apply #'+ (remove nil lst)))
 
- ;now for the breadth-first
- ;breadth-first - takes and endnode a queue of unexplored nodes and the network
- ;see if node is the end node
- ;if not append the nodes children to the end of the queue (to be searched) and then research it
- ;this way node is found. but we need the path as well so watch
- (defun bfs (end queue network)
-   (if (null queue)
-       nil
-       (let ((path (car queue)))
-	 (let ((node (car path)))
-	   (if (eql node end)
-	       (reverse path); then we've found the path (in backwards order)
-	       (bfs end ;recurse 
-		    (append (cdr queue) ;the rest of the queue
-			    (new-paths path node network)) ;and the added child nodes (with paths)
-		    network))))))
- ;path (A)  - node 'A  - network ((A b c))
- (defun new-paths (path node net)
-   (mapcar #'(lambda (n)
-	       (cons n path))
-	   (cdr (assoc node net)))) ; (B C)
- ;everything in this list gets gets the function applied to it
+  ;my version of summit
+  (defun my-summit2 (lst)
+    (cond
+      ((null lst) 0)
+      ((null (car lst))
+       (my-summit2 (cdr lst)))
+      (t
+	(+ (car lst)
+	   (my-summit2 (cdr lst))))))
 
- ;Exercises Chapter 3 chap 3 questions
- ;2.write a version of union that preserves the order of the elements in the original lists:
- ;(defun new-union (l1 l2)
- ;  (cond
- ;    ((null l1) l2)
- ;    ((null l2) nil)
- ;    ((not (eq nil (member (car l2) l1)))
- ;     (cons l1
- ;           (cons (car l2)
- ;                 (new-union l1 (cdr l2))))))
- ;    (t))
+  ;pg version
+  (defun summit (lst)
+    (if (null lst)
+	0
+	(let ((x (car lst)))
+	  (if (null x)
+	      (summit (cdr lst))
+	      (+ x (summit (cdr lst)))))))
 
- ;this doesn't work and neither does removing the last cons work
- (defun new-union(l1 l2)
-   (cond
-     ((null l1) l2)
-     ((null l2) nil)
-     ((eq nil (member (car l2) l1))
-      (cons l1
-	(cons (car l2)
-	  (new-union (cons l1
-		       (car l2))
-	    (cdr l2)))))
-     (t
+  ;chapter 3
+  ;(setf x (cons 'a nil))
+  ;(setf y (list 'a 'b 'c))
+  ;(setf z (list 'a (list 'b 'c) 'd))
+  (defun our-listp (x)
+    (or (null x) (consp x))) ;consp returns true if cons is a list!
+  ;everything in a list that's not an atom is a list
+  (defun our-atom (x)
+    (not (consp x))) ;try this with nil it's both an atom and a list!!!
+
+  (eql (cons 'a nil) (cons 'a nil)); => nil becuse they're distinct objects in memory ;but equalp would work
+
+  (defun our-equal (x y)
+    (or (eql x y)
+	(and (consp x)
+	     (consp y)
+	     (our-equal (car x) (car y))
+	     (our-equal (cdr x) (cdr y)))))
+  ;NOTE
+  ;variables have values in the same way as lists have elements
+  ;(setf x '(a b c))
+  ;(setf y x)
+  ;(eql x y) ;=> T becuse they point to the same thing
+  ;(setf x (remove 'a x))
+  ;(eql x y) ;=> false no longer point to the same thing
+  (setf x '(a b c)
+	y (copy-list x))
+  (eql x y) ;-> nil (looks like a picture of a double bus pointing to the same values)
+  ;new bus with the same passengers
+
+  (defun our-copy-list (lst)
+    (if (atom lst)
+	lst ;will happen in the last element or will happen if there is only one element
+	(cons (car lst)
+	  (our-copy-list (cdr lst)))))
+
+  ;append is the conatenation of any number of lists
+  (append '(a b) '(c d) '(e))
+
+  ;Notice
+  (consp nil) ;NIL
+  (listp nil) ;T
+  ;do some run-length-encoding
+  (defun compress (x)
+    (if (consp x) ;is x a member of a list
+	(compr (car x) 1 (cdr x))
+	x))
+  (defun compr (elem n lst)
+    (if (null lst)
+	(list (n-elts elem n))
+	(let ((next (car lst))) ;else 
+	  (if (eql next elem)
+	      (compr elem (+ n 1) (cdr lst))
+	      (cons (n-elts elem n)
+		    (compr next 1 (cdr lst)))))))
+  ;returns the number of times a an element appeared as a list
+  ;ed (3 SOUP) ;3 == n AND elem = SOUP
+  (defun n-elts (elem n)
+    (if (> n 1)
+	(list n elem)
+	elem))
+  ;use
+  (print (compress '(soup soup milk tea tea tea salad chicken salad salad)))
+
+  ;practice
+  ;(defun compr (elem n lst)
+  ;  (cond
+  ;    ((null lst)
+  ;     (list (n-elts elem n))) ;the function will always return a list
+  ;    ((eql elem (car lst)) ;elem is current element we're looking at, (car lst) is the next eleemnt we're comparing it to.
+  ;     (compr elem (1+ n) (cdr lst)))
+  ;    (t
+  ;      (cons (n-elts elem n)
+  ;        (compr (car lst) 1 (cdr lst))))))
+
+  ;should be the same as above
+  ;(print (compress '(soup soup milk tea tea tea salad chicken salad salad)))
+
+  ;practice using let
+  ;(defun compr (elem n lst)
+  ;  (cond
+  ;    ((null lst)
+  ;      (list (n-elts elem n)))
+  ;    (t
+  ;      (let ((next (car lst)))
+  ;        (cond
+  ;          ((eql next elem)
+  ;           (compr elem (1+ n) (cdr lst)))
+  ;          (t
+  ;            (cons (n-elts elem n)
+  ;              (compr next 1 (cdr lst)))))))))
+
+  ;(print (compress '(soup soup milk tea tea tea salad chicken salad salad)))
+
+  ;eg (list-of 3 'soup)
+  ;(SOUP SOUP SOUP)
+  (defun list-of (n elem)
+    (if (zerop n)
+	nil
+	(cons elem (list-of (1- n) elem))))
+
+  (defun uncompress (lst)
+    (if (null lst)
+	nil
+	(let ((elem (car lst))
+	      (the-rest (uncompress (cdr lst))))
+	  (if (consp elem)
+	      (append (apply #'list-of elem) ;see we use apply becuase we know that (4 SOUP) is what elem is. apply takes a list of args and then passes them in one at a time to the function that needs them! 
+		      the-rest)
+	      (cons elem the-rest)))))
+
+  (uncompress '((3 soup) chicken (2 pie)))
+  ;get element at nth position
+  (nth 0 '(a b c)) ; => 'A
+  ;get nth cdr call this
+  (nthcdr 2 '(a b c)); => '(C)
+
+  (defun our-nthchdr (n lst)
+    (if (zerop n)
+	lst
+	(our-nthchdr (1- n) (cdr lst))))
+
+  (last '(a b c)) ;=> (C) not 'C 
+
+  ;takes a functiona nd applies it every member of the list
+  ;returns the list of the results of doing such thing
+  (print (mapcar #'(lambda (x) (+ x 10))
+		 '(1 2 3))) ;-> (11 12 13)
+
+  ;applies list to both lists until one is empty
+  (print (mapcar #'list
+		 '(a b c d e f g)
+		 '(1 2 3))) ;=> ((a 1) (b 2) (c 3))
+  (mapcar #'(lambda (x) x)
+	  '(a b c)) ;=> '(A B C) returns itself 
+  (mapcar (function (lambda (x) x)) '(a b c)) ;function and #' do the same thing 
+  ;trees
+  ;lets take (a (b c) d)
+  ;function copy-tree takes a tree and returns a copy of it like so
+  (defun our-copy-tree (tr)
+    (if (atom tr)
+	tr ;if it's an atom we want it's value
+	(cons (our-copy-tree (car tr)) ;so it's not an atom so we want it's left side value
+	      (our-copy-tree (cdr tr))))) ;as well as we want the right side value
+  ;(and (integerp x) (zerop (mod x 2)))
+  (substitute 'y 'x '(and (integerp x) (zerop (mod x 2)))) ; will return list as is! no change! because it sees 3 elements that are not x => 'and '(integerp x) '(zerop (mod x 2))
+  ;but subst goes along the car and cdr of the tree
+  (subst 'y 'x '(and (integerp x) (zerop (mod x 2))))
+  (defun our-subst (new old tree)
+    (if (eql tree old)
+	new
+	(if (atom tree) ;NIL IS AN ATOM! 
+	    tree
+	    (cons (our-subst new old (car tree))
+		  (our-subst new old (cdr tree))))))
+
+  (defun our-subst2 (new old tree)
+    (cond
+      ((null tree) nil) ;nil is an atom
+      ((atom tree)
+       (cond
+	 ((eql tree old)
+	  new)
+	 (t
+	   tree)))
+      (t
+	(cons (our-subst2 new old (car tree))
+	      (our-subst2 new old (cdr tree))))))
+  ;use
+  (our-subst 'y 'x '(and (integerp x) (zerop (mod x 2))))
+  (our-subst 'y 'x '(and (integerp x) (zerop (mod x a b x (x a d d x (((x)))) 3 2))))
+  (our-subst2 'y 'x '(and (integerp x) (zerop (mod x a b x (x a d d x (((x)))) 3 2))))
+
+  ;see how all base cases are covered
+  ;works for n = 0 and for n+1
+  (defun our-len(lst)
+    (if (null lst)
+	0
+	(1+ (our-len (cdr lst)))))
+
+  ;compares by using eql
+  (member 'b '(a b c)) ; => (B C) not just t it returns a list otherise it returns nil
+  ;:test that function will be used to test 
+  (member '(a) '((b) (a b) (a) (z)) :test #'equal) ;this will return true since (equal '(a) '(a)) => true
+  (member '(a) '((b) (a b) (a) (z)) :test #'eql) ;the default test operator will return nil since (eql '(a) '(a)) => NIL
+  ;:key specifies the function to be applied to each element before comparison
+  (member 'a '((x y) (b a) (1 2)) :key #'car)  ; nil! since
+  (member 'a '((x y) (b a) (1 2)) :key #'cadr) ;((B A) (1 2))
+  (member 'b '((x y) (b a) (1 2)) :key #'car)
+  ;order doesn't matter
+  (member 2 '((1) (2)) :key #'car :test #'equal)
+  (member 2 '((1) (2)) :test #'equal :key #'car)
+
+  (member-if #'oddp '(2 3 4 5)) ;=> (3 4 5)
+  (member-if #'evenp '( 1 2 3 4 5)) ;-> (2 3 4 5)
+
+  (defun our-member-if (fn lst)
+    (and (consp lst)
+	 (if (funcall fn (car lst))
+	     lst
+	     (our-member-if fn (cdr lst)))))
+
+  ;use
+  (our-member-if 'oddp '( 2 3 4 5))
+
+  ;it ajoins only if it's not already in the list
+  ;and takes ame keyword args as member
+  (adjoin 'b '(a b c)) ;=> (a b c)
+  (adjoin 'z '(a b c)) ; => (z a b c)
+
+  (union '(a b c) '(c b s)) ;(a b c s) ;not in that order either playa
+  (intersection '(a b c) '(b b c)) ;=> ( c b) ;no order preservation
+  (set-difference '(a b c d e) '(b e)) ;=> (c d a) 
+
+  ;sequences - lists and vectors
+  (length '(a b c)) ;3
+  (subseq '(a b c d) 1 2); (b c)
+  (subseq '(a b c d) 1) ; (b c d)
+
+  (defun mirror? (s)
+    (let ((len (length s)))
+      (and (evenp len)
+	   (let ((mid (/ len 2)))
+	     (equal (subseq s 0 mid) ;(starts from 0 and goes to mid)
+		    (reverse (subseq s mid))))))) ;starts from mid and goes to the other side
+
+  (defun mirror2? (s)
+    (and (evenp (length s))
+	 (equal (reverse s) s)))
+  ;can also take a key
+  (sort '( 0 2 1 3 8) #'>)
+  (sort '( 0 2 1 3 8) #'<)
+
+  ;if lst is a list of tuples it can sort the list and return 
+  (defun nthmost (n lst)
+    (nth (1- n)
+	 (sort (copy-list lst) #'>)))
+  (nthmost 2 '(0 2 1 3 8)) ;(8 3 2 1 0) a and picks the second one
+
+  (every #'oddp '(1 3 5)) ; T
+  (some  #'evenp '(1 3 5 2)); T
+
+  (every #'> '(1 3 5)
+	     '(0 2 4 1)); like the mapcar pics the shortest list to work through with the corresponding other list 
+  ;push and pull are macros
+  ;use
+  (setf xpush '(b))
+  (push 'a xpush)
+  (pop xpush)
+
+  ;use push to determine an itertive version of reverse for lists
+  ;see dolist is like  an iterator for a list
+  (defun our-reverse (lst)
+    (let ((acc nil))
+      (dolist (elem lst) ;for each element in the list
+	(push elem acc))
+      acc))
+  ;use
+  (our-reverse '(1 2 3 a blah b))
+
+  ;pushnew uses adjoin
+  (let ((x '(a b)))
+    (pushnew 'c x)
+    (pushnew 'a x)
+    x)
+
+  ;proper lists end in a null
+  ;wont work for a list of nil
+  ;messes up for circular lists
+  (defun proper-list? (x)
+    (or (null x)
+	(and (consp x)
+	     (proper-list? (cdr x)))))
+  ;use
+  (consp (cons 'a 'b)) ;T
+  (consp (cdr (cons 'a nil))); T
+  (consp (cdr (cons 'a 'b))) ;NIL see how in this case the proper list doesn't end with a null that's all there
+  ;is to a proper list
+  (consp (cdr (cons nil nil))) ;NIL
+  (setf pair (cons 'a 'b))
+  (proper-list? pair) ;NIL
+  (proper-list? (cons pair nil)) ; ((A.B) . nil) => ((A.B)) => true
+
+  ;returns the same thing
+  '(a . (b . (c . nil)))
+  (cons 'a (cons 'b (cons 'c 'd)))
+
+  ;many ways to define this
+  ;just dot notation
+  '(a b)
+  '(a . (b . nil))
+  '(a . (b))
+  '(a b . nil)
+
+  ;a-lists a-list assoc-lists
+  (setf trans '((+ . "add") (- . "subtract")))
+  (assoc '+ trans)
+  (assoc '- trans)
+  (assoc '* trans)
+
+  ;our version of assoc list
+  (defun our-assoc (key alist)
+    (and (consp alist)
+	 (let ((pair (car alist)))
+	   (if (eql key (car pair))
+	       pair
+	       (our-assoc key (cdr alist))))))
+
+
+  ;find the shortest path in a network
+  (setf min '((a b c) (b c) (c d)))
+  (assoc 'a min) ; (a b c)
+  ;so for the node a it'll give you all the nodes that touch it
+  (cdr (assoc 'a min)) ;(b c)
+
+  ;(defun shortest-path (start end net)
+  ;  (bfs end (list (list start)) net))
+
+  ;;one that does the searching
+  ;(defun bfs (end queue net)
+  ;  (if (null queue)
+  ;      nil
+  ;      (let ((path (car queue))) ;say (a) for example
+  ;        (let ((node (car path))) ;say a for example
+  ;          (if (eql node end)
+  ;              (reverse path) ;
+  ;              (bfs end
+  ;                   (append (cdr queue) ;keep adding to the end of the end of the queue
+  ;                           (new-paths path node net))
+  ;                   net))))))
+
+  ;so it takes the current path and the node alont with the network
+  ;finds the node and the path to get to that place and returns it
+  ;if the path (b c) - node 'a - net ((a b c) (b c) (c d))
+  ;(cons '(b c) '())
+  ;(defun new-paths (path node net)
+  ;  (mapcar #'(lambda (n)
+  ;              (cons n path)) ;will give you a list of n along with the rest of the path 
+  ;          (cdr (assoc node net))));the nodes associaded
+
+  ;breadth-first
+  ;'a 'd ((a b c) (b c) (c d))
+  (defun shortest-path (start end net)
+    (bfs end (list (list start)) net)) ; 'D ((A)) ((A B C) (B C) (C D))
+
+  ;now for the breadth-first
+  ;breadth-first - takes and endnode a queue of unexplored nodes and the network
+  ;see if node is the end node
+  ;if not append the nodes children to the end of the queue (to be searched) and then research it
+  ;this way node is found. but we need the path as well so watch
+  (defun bfs (end queue network)
+    (if (null queue)
+	nil
+	(let ((path (car queue)))
+	  (let ((node (car path)))
+	    (if (eql node end)
+		(reverse path); then we've found the path (in backwards order)
+		(bfs end ;recurse 
+		     (append (cdr queue) ;the rest of the queue
+			     (new-paths path node network)) ;and the added child nodes (with paths)
+		     network))))))
+  ;path (A)  - node 'A  - network ((A b c))
+  (defun new-paths (path node net)
+    (mapcar #'(lambda (n)
+		(cons n path))
+	    (cdr (assoc node net)))) ; (B C)
+  ;everything in this list gets gets the function applied to it
+
+  ;Exercises Chapter 3 chap 3 questions
+  ;2.write a version of union that preserves the order of the elements in the original lists:
+  ;(defun new-union (l1 l2)
+  ;  (cond
+  ;    ((null l1) l2)
+  ;    ((null l2) nil)
+  ;    ((not (eq nil (member (car l2) l1)))
+  ;     (cons l1
+  ;           (cons (car l2)
+  ;                 (new-union l1 (cdr l2))))))
+  ;    (t))
+
+  ;this doesn't work and neither does removing the last cons work
+  (defun new-union(l1 l2)
+    (cond
+      ((null l1) l2)
+      ((null l2) nil)
+      ((eq nil (member (car l2) l1))
        (cons l1
-	 (new-union l1
-	   (cdr l2))))))
- ;works
- (defun new-union (l1 l2)
-   (cond
-     ((null l1) l2) ;will usually not be the case
-     ((null l2) l1)
-     ((eq nil (member (car l2) l1))
-      (new-union (append l1
-		   (list (car l2)))
-	(cdr l2)))
-     (t
-       (new-union l1 (cdr l2)))))
+	 (cons (car l2)
+	   (new-union (cons l1
+			(car l2))
+	     (cdr l2)))))
+      (t
+	(cons l1
+	  (new-union l1
+	    (cdr l2))))))
+  ;works
+  (defun new-union (l1 l2)
+    (cond
+      ((null l1) l2) ;will usually not be the case
+      ((null l2) l1)
+      ((eq nil (member (car l2) l1))
+       (new-union (append l1
+		    (list (car l2)))
+	 (cdr l2)))
+      (t
+	(new-union l1 (cdr l2)))))
 
- ;try another way with pushnew
- ;works
- (defun new-union-helper (l1 l2)
-   (cond
-     ((null l1) l2)
-     ((null l2) l1)
-     (t
-       (new-union-helper (pushnew (car l2) l1)
-	 (cdr l2)))))
- (defun new-union (l1 l2)
-   (reverse (new-union-helper (reverse l1) l2)))
+  ;try another way with pushnew
+  ;works
+  (defun new-union-helper (l1 l2)
+    (cond
+      ((null l1) l2)
+      ((null l2) l1)
+      (t
+	(new-union-helper (pushnew (car l2) l1)
+	  (cdr l2)))))
+  (defun new-union (l1 l2)
+    (reverse (new-union-helper (reverse l1) l2)))
 
- ;now use mapcar
- ;works
- (defun new-union-helper (l1)
-   (let ((l2 nil))
-     (mapcar #'(lambda (a)
-		 (pushnew a l2)) ;doesn't work with adjoin 
-       l1)
-     (reverse l2)))
- (defun new-union (l1 l2)
-   (new-union-helper (append l1 l2)))
+  ;now use mapcar
+  ;works
+  (defun new-union-helper (l1)
+    (let ((l2 nil))
+      (mapcar #'(lambda (a)
+		  (pushnew a l2)) ;doesn't work with adjoin 
+	l1)
+      (reverse l2)))
+  (defun new-union (l1 l2)
+    (new-union-helper (append l1 l2)))
 
- ;3; takes an element and then returns it if it's in the list
- (defun occurance-helper (a l)
-   (let ((curr-elem (assoc a l)))
-     (if (not (eql nil curr-elem))
-	 (cons a (1+ (cdr curr-elem)))
-	 (cons a 1))))
+  ;3; takes an element and then returns it if it's in the list
+  (defun occurance-helper (a l)
+    (let ((curr-elem (assoc a l)))
+      (if (not (eql nil curr-elem))
+	  (cons a (1+ (cdr curr-elem)))
+	  (cons a 1))))
 
- (defun occurance (l)
-   (let ((l2 nil))
-     (dolist (obj l)
-       (push (occurance-helper obj l2) l2))
-     l2))
- (defun occurance (l)
-   (let ((l2 nil))
-     (dolist (obj l)
-       (push (occurance-helper obj l2) l2))
-     (sort l2 #'> :key #'cdr )))
+  (defun occurance (l)
+    (let ((l2 nil))
+      (dolist (obj l)
+	(push (occurance-helper obj l2) l2))
+      l2))
+  (defun occurance (l)
+    (let ((l2 nil))
+      (dolist (obj l)
+	(push (occurance-helper obj l2) l2))
+      (sort l2 #'> :key #'cdr )))
 
- ;incf instead of 1+ because incf actually changes the meaning
- (defun occurance2 (l)
-   (let ((res nil))
-     (dolist (obj l)
-       (if (assoc obj res)
-	   (incf (cdr (assoc obj res)))
-	   (push (cons obj 1) res)))
-     (sort res #'> :key #'cdr)))
+  ;incf instead of 1+ because incf actually changes the meaning
+  (defun occurance2 (l)
+    (let ((res nil))
+      (dolist (obj l)
+	(if (assoc obj res)
+	    (incf (cdr (assoc obj res)))
+	    (push (cons obj 1) res)))
+      (sort res #'> :key #'cdr)))
 
- ;try it again with mapcar!
- (defun occurance-mapcar(l)
-   (let ((res nil))
-     (dolist (obj l)
-       (mapcar #'occurance-helper (list obj) (list (list res))))
-     res))
-
-
-
- ;4 why does (member '(a) '( (a) (b))) return false
- ;member by default works with equal! we want it to work with equal or equalp
- ;i didn't know the answer to this one member needs to compare things right eql compares thing but since they're technically not the same object
- ;explanation of eql and equal and also see page 44
- (member '(a) '((a) (b))) ; NIL
- (member '(a) '((a) (b)) :test #'equal) ; now it works! returns '(a) (b)
-
- ;5 (pos+ '(7 5 1 4)) => '(7 6 3 7) ;bascially the number in the list plus 
- ;using recursion
- (defun pos+ (l)
-   (pos+-helper 0 l nil))
- ;using push
- (defun pos+-helper (i l res)
-   (cond
-     ((null l) (reverse res))
-     (t
-       (pos+-helper (1+ i)
-	 (cdr l)
-	 (push (+ (car l) i) res)))))
- ;using append 
- (defun pos+-helper (i l res)
-   (cond
-     ((null l) res)
-     (t
-       (pos+-helper (1+ i)
-	 (cdr l)
-	 (append res (list (+ (car l) i))))))) 
-
- ;do this using mapcar
- ;and an helper function
- (defun make-0-to-n-list (n pos l)
-   (if (eql 0 n)
-       l
-       (make-0-to-n-list (1- n) (1+ pos) (append l (list pos)))))
- ;(defun pos+ (l)
- ;  (let ((poslist (make-0-to-n-list (length l) 0 nil)))
- ;    (mapcar #'+ poslist l)))
- (defun pos+ (l)
-   (mapcar #'+ (make-0-to-n-list (length l)
-		 0
-		 nil)
-	       l))
- ;now do it with iterations
- (defun pos+ (l)
-   (let ((tup (copy-list l)))
-     (do ((i 0 (1+ i))) ;when to start first thing do macro takes 
-	 ((>= i (length tup)) tup) ;when to stop is next thing do macro takes
-       (setf (nth i tup) (+ (nth i tup) i)))))
-
- ;my first guess but this is wrong since we used cons lol
- (defun govern-cons (x y)
-   (cons y x))
-
- ;see this way makes more sense
- (defun govern-cons (x y)
-   (let ((l (nil . nil)))
-     (setf (cdr l) x
-	   (car l) y)
-     l))
- ;make list but we need to use something like &rest
- ;instead of cdr we need car
- (defun govern-length (l)
-   (cond
-     ((null l) 0)
-     (t
-       (1+ (govern-length (cdr l))))))
-
- (defun govern-member (a ls)
-   (cond
-     ((null ls) nil)
-     ((eq a (car ls)) ;switch the cdr and the car here 
-      (cdr ls))
-     (t 
-       (govern-member a (cdr ls)))))
-
- ;3-7 modify the program in figure 3.6 to use fewer cons cells. (hint use dotted lists)
- ;original
- (defun compress (x)
-   (if (consp x) 
-       (compr (car x)  1 (cdr x))
-       x))
- ;same as original
- (defun compr (elem n lst)
-   (if (null lst)
-       (list (n-elts elem n))
-       (let ((next (car lst)))
-	 (if (eql next elem)
-	     (compr elem (1+ n) (cdr lst))
-	     (cons (n-elts elem n)
-	       (compr next 1 (cdr lst))))))) 
-
- ;make it so that this is a 
- (defun n-elts (elem n)
-   (if (> n 1)
-       (cons n elem) ;see instead of making them all list to save space we can make them all dotted lists
-       elem))
-
- ;define a function that takes a list and prints it in dot notation
- (defun showdots (l)
-   (cond
-     ((eq (car (last l))
-	  (car l))
-      (format nil "(~A . ~A)" (car l) (cdr l)))
-     (t
-       (format nil "(~A . ~A)" (car l) (showdots (cdr l))))))
-
- ;use another method
- ;doesn't work format t behaves funny
- (defun showdots (l)
-   (if (atom l)
-       (format t "~A" l) ;nil is an atom so it returns nil
-       (progn
-	 (format t "(~A . ~A )" (showdots (car l))
-				(showdots (cdr l))))))
-
- ;attempt 2
- (defun showdots (l)
-   (if (atom l)
-       (format t "~A" l)
-       (progn
-	 (format t "(")
-	 (showdots (car l))
-	 (format t " . ")
-	 (showdots (cdr l))
-	 (format t ")"))))
-
-
- ;3-9 from the errata it says longest path with no duplicates
- (defparameter *matching-paths* nil)
- (defun longest-path (start end net)
-   (find-all-paths end (list (list start)) net *matching-paths*))
- ;network ((a b c) (b c) (c d))
- (defparameter *network* '((a b c) ( b c) (c d)))
-
- (defun find-all-paths (end queue net dest-paths)
-   (if (null queue)
-       nil
-       (let ((path (car queue)))
-	 (let ((node (car path)))
-	   (if (eql node end) ;if we find something that matches
-	       (progn
-		 (push (reverse path) dest-paths) ;append it to the list of matching paths
-		 (find-all-paths end
-				 (cdr queue)
-				 net
-				 dest-paths))
-	       (find-all-paths end
-			       (append (cdr queue)
-				       (new-paths path node net))
-			       net
-			       dest-paths))))))
- (defun new-paths (path node net)
-   (mapcar #'(lambda (n)
-	       (cons n path)) ;say path is (A) then (B A) (C A)
-	   (cdr (assoc node net)))) ;(B C)
-
- (defun bfs2 (end queue net)
-   (if (null queue)
-       nil
-       (let ((path (car queue)))
-	 (let ((node (car path)))
-	   (cond
-	     ((eq node end)
-		(push (reverse path) *matching-paths*))
-	     (t
-	       (bfs2 end
-		     (cdr queue)
-		     (append (cdr queue)
-			     (new-paths path node net)))))))))
- (defun longest-path2 (start end net)
-   (bfs2 end (list (list start)) net))
-
- ;another attempt
- (defun bfs3 (end queue net curr-path)
-   (if (null queue)
-       curr-path
-       (let ((path (car queue)))
-	 (let ((node (car path)))
-	   (if (eql node end)
-	       (progn
-		 (setf curr-path (reverse path))
-		 (bfs3 end
-		       (cdr queue)
-		       net
-		       curr-path))
-	       (bfs3 end
-		     (append (cdr queue)
-			     (new-paths path node net))
-		     net
-		     curr-path))))))
- (defun longest-path3 (start end net)
-   (bfs3 end (list (list start)) net *matching-paths*))
+  ;try it again with mapcar!
+  (defun occurance-mapcar(l)
+    (let ((res nil))
+      (dolist (obj l)
+	(mapcar #'occurance-helper (list obj) (list (list res))))
+      res))
 
 
 
- ;;;;CHAPTER 4 chapter 4 chap 4
- ;arrays
- ;make an array with the make-array function takes a list and can take an initial value
- (setf arr (make-array '(2 3) :initial-element nil))
- ;reference an array
- (aref arr 0 0) ;=> nil since that's what we set it up to be in the previous step
- ;set specific indices of an array
- (setf (aref arr 0 1) 'B) ;pick (aref) the elemnt and then setf it
- ;it's literally typed like this in lisp the literal version of an array ie in the terminal type this
- ;#2A((NIL B NIL) (NIL NIL NIL))
- ;same as if we typed wha tarray was
- (setf *print-array* t) ;and set it to false to see the actual location of the arrray
+  ;4 why does (member '(a) '( (a) (b))) return false
+  ;member by default works with equal! we want it to work with equal or equalp
+  ;i didn't know the answer to this one member needs to compare things right eql compares thing but since they're technically not the same object
+  ;explanation of eql and equal and also see page 44
+  (member '(a) '((a) (b))) ; NIL
+  (member '(a) '((a) (b)) :test #'equal) ; now it works! returns '(a) (b)
 
- ;to make a one dim array - aka vector!!!- then just give a number instead of the array dimensions
- (setf vec (make-array 4 :initial-element nil))
- ;one d array is calle da vector! so call it with a vector
- (vector "a" 'b 3 18)
- ;svref stands for sv stands for "simple vector" - simple array not adjustable nor displaced nor has a fill-pointer. arrays are simple by default. simple vector is simple array one dim and elements of any type
- (svref vec 0) 
- (setf (svref vec 0) 20)
+  ;5 (pos+ '(7 5 1 4)) => '(7 6 3 7) ;bascially the number in the list plus 
+  ;using recursion
+  (defun pos+ (l)
+    (pos+-helper 0 l nil))
+  ;using push
+  (defun pos+-helper (i l res)
+    (cond
+      ((null l) (reverse res))
+      (t
+	(pos+-helper (1+ i)
+	  (cdr l)
+	  (push (+ (car l) i) res)))))
+  ;using append 
+  (defun pos+-helper (i l res)
+    (cond
+      ((null l) res)
+      (t
+	(pos+-helper (1+ i)
+	  (cdr l)
+	  (append res (list (+ (car l) i))))))) 
 
- ;;;; Utilities for operations on sorted vectors.
+  ;do this using mapcar
+  ;and an helper function
+  (defun make-0-to-n-list (n pos l)
+    (if (eql 0 n)
+	l
+	(make-0-to-n-list (1- n) (1+ pos) (append l (list pos)))))
+  ;(defun pos+ (l)
+  ;  (let ((poslist (make-0-to-n-list (length l) 0 nil)))
+  ;    (mapcar #'+ poslist l)))
+  (defun pos+ (l)
+    (mapcar #'+ (make-0-to-n-list (length l)
+		  0
+		  nil)
+		l))
+  ;now do it with iterations
+  (defun pos+ (l)
+    (let ((tup (copy-list l)))
+      (do ((i 0 (1+ i))) ;when to start first thing do macro takes 
+	  ((>= i (length tup)) tup) ;when to stop is next thing do macro takes
+	(setf (nth i tup) (+ (nth i tup) i)))))
 
- ;;; Finds an element in a sorted vector. 
+  ;my first guess but this is wrong since we used cons lol
+  (defun govern-cons (x y)
+    (cons y x))
 
- (defun bin-search (obj vec)
-   (let ((len (length vec)))
-    ;; if a real vector, send it to finder
-     (and (not (zerop len))
-	  (finder obj vec 0 (1- len)))))
+  ;see this way makes more sense
+  (defun govern-cons (x y)
+    (let ((l (nil . nil)))
+      (setf (cdr l) x
+	    (car l) y)
+      l))
+  ;make list but we need to use something like &rest
+  ;instead of cdr we need car
+  (defun govern-length (l)
+    (cond
+      ((null l) 0)
+      (t
+	(1+ (govern-length (cdr l))))))
 
- (defun finder (obj vec start end)
-   (format t "~A~%" (subseq vec start (1+ end)))
-   (let ((range (- end start)))
-     (if (zerop range)
-	 (if (eql obj (aref vec start)) ;or end in this case
-	     obj
-	     nil)
-	 (let ((mid (+ start (round (/ range 2)))))
-	   (let ((obj2 (aref vec mid)))
-	     (if (< obj obj2)
-		 (finder obj vec start (1- mid))
-		 (if (> obj obj2)
-		     (finder obj vec (1+ mid) end)
-		     obj))))))); if it's not less than and not > it must be the object!
- (bin-search 3 #(0 1 2 3 4 5 6 7 8 9))
+  (defun govern-member (a ls)
+    (cond
+      ((null ls) nil)
+      ((eq a (car ls)) ;switch the cdr and the car here 
+       (cdr ls))
+      (t 
+	(govern-member a (cdr ls)))))
 
- ;;strings are vectors of characters
- ;;"string" #\c is the character c
- (char< #\c #\d) ;T
- (char> #\a #\A) ;T
- (char<=  #\B #\a); T
- (char/= #\a #\a);Nil ;this checks if they're different 
- ;;returns the code for the character
- (char-code #\a) ;97
- ;returns the character for the code
- (code-char 97) ; a
- (sort "elbow" #'char<) ;accending order
- (sort "asdflksaxcvjklj" #'char>) ;descending order 
- ;;strings are vectors so sequence and array functions worn on them
- (aref "abc" 1) ;#\b
- ;;char is faster than aref
- (char "abc" 1); #\b
- ;;use setf with char (or aref) to replace elements
- (defun my-str-manipulator (some-str)
-   (let ((str (copy-seq some-str)))
-     (setf (aref str 3) #\K) ;or (setf (char str 3)) #\k
-     str))
- (equal "fred" "fred") ;T
- (equal "fred" "Fred") ;nil
- (string-equal "fred" "FRED"); T
- ;;build a string with format
- (format nil "~A or ~A" "truth" "dare")
- ;concatenate takes a symbol and for the type of result, puls
- (format nil (concatenate 'string "blah" "blue" "butts"))
- ;;the type sequence includes both lists and vectors
- ;;lists are sequences as are vectors (and a string is vector of chars)
- (mirror? '(a b b a)) ; T
- (mirror? "abba") ; T since both sequences!
+  ;3-7 modify the program in figure 3.6 to use fewer cons cells. (hint use dotted lists)
+  ;original
+  (defun compress (x)
+    (if (consp x) 
+	(compr (car x)  1 (cdr x))
+	x))
+  ;same as original
+  (defun compr (elem n lst)
+    (if (null lst)
+	(list (n-elts elem n))
+	(let ((next (car lst)))
+	  (if (eql next elem)
+	      (compr elem (1+ n) (cdr lst))
+	      (cons (n-elts elem n)
+		(compr next 1 (cdr lst))))))) 
 
- ;get anything from any sequence
- (elt '(a b c) 1)
- (elt "abcd" 2) ;messes up if indexing out of range
+  ;make it so that this is a 
+  (defun n-elts (elem n)
+    (if (> n 1)
+	(cons n elem) ;see instead of making them all list to save space we can make them all dotted lists
+	elem))
 
- ;using elt we could write a version of mirror? that would be faster
- (defun mirror? (s)
-   (let ((len (length s)))
-     (and (evenp len)
-	  (do ((forward 0 (1+ forward)) ;2 variables set up forward
-	       (back (1- len) (1- back))) ;another variable set up back starts at (- len 1) and we decrement it by one every time 
-	      ((or (> forward back) ;stop when forward is bigger than end or when
-		   (not (eql (elt s forward)
-			     (elt s back)))) ;the stopping conditions
-	       (> forward back)))))) ;the second part of this is just to print something when the do macro is done
- ;;;lists only allow sequential access where as vecotrs allow random access so it's just as cheap to reach
- ;;;one element is as easy to get to as is any other element 
- ;:key  identity T
- ;:test eql 
- ;:from-end nil
- ;:start 0
- ;:end nil
- (position #\a "fantasia") ; 1
- (position #\a "fantasia" :start 3 :end 5) ; 4
- (position #\a "fantasia" :from-end t) ; with it set to t it'll be position number 7 from the start (not like 0 from end or anything weird)
- (position 'a '((c d) (a b)) :key #'car) ;answer is 1!!! there are 2 total elements in there
- ;;car will be applied to each element of a sequence before it's considered
- ;;;so we ask for pos of first element whose car is the symbol a 
- (position 'a '((b a) (c d a) (a b c)) :key #'car) ; 2
- (position 'a '((b a) (c d a) (a b c)) :key #'cadr); 0
- (position 'a '((b a) (c d a) (a b c)) :key #'caddr);1
- (position 'a '((b a) (c d a) (Z b c)) :key #'car); nil
- ;;:test takes 2 args in this case pg 64
- (position '(a b) '((a b) (c d))) ; will be false since by default it uses eql!!!!! 
- (position '(a b) '((a b) (c d)) :test #'equal) ;0 ie that's the position number
- ;;can be a function of 2 args as well
- ;;see how it compares to multiple things
- (position 3 '(1 0 7 5) :test #'< ) ; 2
- (position 3 '(8 9 5 6 4 1 7 5) :test #'> ) ;5 the fith position it's greater (> 3 1) == T 
+  ;define a function that takes a list and prints it in dot notation
+  (defun showdots (l)
+    (cond
+      ((eq (car (last l))
+	   (car l))
+       (format nil "(~A . ~A)" (car l) (cdr l)))
+      (t
+	(format nil "(~A . ~A)" (car l) (showdots (cdr l))))))
 
- ;;this way didn't work 
- ;;couldn't find the #\  the space is needed 
- ;(defun second-word (sting)
- ;  (let ((p1 (+ (position #\ sting) 1)))
- ;    (subseq sting p1 (position #\ sting :start p1))))
+  ;use another method
+  ;doesn't work format t behaves funny
+  (defun showdots (l)
+    (if (atom l)
+	(format t "~A" l) ;nil is an atom so it returns nil
+	(progn
+	  (format t "(~A . ~A )" (showdots (car l))
+				 (showdots (cdr l))))))
 
- ;;try with the sapce character
- (defun second-word (str)
-   (let ((p1 (+ (position #\space str) 1)))
-     (subseq str p1 (position #\space str :start p1))))
- ;;use
- (second-word "Form follows function.")
- ;;;see if an element satisfies a predicate of one argument
- ;;takes a function and a sequence and returns the position of the first element satisfying hte function:
- (position-if #'oddp '(0 2 3 4 5)) ;2 since that's the position of the number 3 in that statment
- ;find is like member and member-if for sequences
- (find #\a "cat") ;returns #\a and not the rest of the characters
- (find-if #'characterp "1ham") ;1 if we used "" then it would return nil - doesn't take :test
- ;;find with :key is better than find-if
- (defparameter *some-list* '((blue)(bunny)(complete)))
- (find-if #'(lambda (x)
-	      (eql (car x) 'complete))
-	  *some-list*)
- (find 'complete *some-list* :key #'car)
- ;;leaves each last occurance of any element of a sequence
- (remove-duplicates "abracadabra")
-
- (reduce #'cons '(a b c d))
- (reduce #'intersection '((b r a d ' s) (b a d) (c a t))) ; see the only thing common in all of them is a 
- ;;;;4.5 parsing dates
- (defun tokens (str test start)
-   (let ((p1 (position-if test str :start start)))
-     (if p1
-	 (let ((p2 (position-if #'(lambda (c)
-				    (not (funcall test c)))
-				str
-				:start p1)))
-	   (cons (subseq str p1 p2)
-		 (if p2
-		     (tokens str test p2)
-		     nil)))
-	 nil)))
-
- (defun constituent (c)
-   (and (graphic-char-p c)
-	(not (char= c #\space ))))
+  ;attempt 2
+  (defun showdots (l)
+    (if (atom l)
+	(format t "~A" l)
+	(progn
+	  (format t "(")
+	  (showdots (car l))
+	  (format t " . ")
+	  (showdots (cdr l))
+	  (format t ")"))))
 
 
+  ;3-9 from the errata it says longest path with no duplicates
+  (defparameter *matching-paths* nil)
+  (defun longest-path (start end net)
+    (find-all-paths end (list (list start)) net *matching-paths*))
+  ;network ((a b c) (b c) (c d))
+  (defparameter *network* '((a b c) ( b c) (c d)))
 
- ;;see how this get's the first thing that isn't an alpha-char-p (like a space or a . or a $ or something)
- (position-if #'(lambda (c) 
-		  (not (funcall 'alpha-char-p c))) 
-	      "9aas8dasdlj12#" 
-	      :start 1);4
- (position-if #'(lambda (c) 
-		  (not (funcall 'alpha-char-p c))) 
-	      "9aas8dasdlj12#" 
-	      :start 5);11
+  (defun find-all-paths (end queue net dest-paths)
+    (if (null queue)
+	nil
+	(let ((path (car queue)))
+	  (let ((node (car path)))
+	    (if (eql node end) ;if we find something that matches
+		(progn
+		  (push (reverse path) dest-paths) ;append it to the list of matching paths
+		  (find-all-paths end
+				  (cdr queue)
+				  net
+				  dest-paths))
+		(find-all-paths end
+				(append (cdr queue)
+					(new-paths path node net))
+				net
+				dest-paths))))))
+  (defun new-paths (path node net)
+    (mapcar #'(lambda (n)
+		(cons n path)) ;say path is (A) then (B A) (C A)
+	    (cdr (assoc node net)))) ;(B C)
 
- ;;notice
- (subseq "abc" 1 nil) ; "bc" see how with nil it's the same thing
- (defun tokens1 (str test start)
-   (let ((p1 (position-if test str :start start)))
-     (if p1
-	 (let ((p2 (position-if #'(lambda (c)
-				    (not (funcall test c)))
-				str
-				:start p1)))
-	    (print p2))
-	 nil)))
- ;;use - also notice that #'constituent or 'constituent works with funcall
- (tokens "ab12 3cde.f
-	 gh" #'constituent 0)
+  (defun bfs2 (end queue net)
+    (if (null queue)
+	nil
+	(let ((path (car queue)))
+	  (let ((node (car path)))
+	    (cond
+	      ((eq node end)
+		 (push (reverse path) *matching-paths*))
+	      (t
+		(bfs2 end
+		      (cdr queue)
+		      (append (cdr queue)
+			      (new-paths path node net)))))))))
+  (defun longest-path2 (start end net)
+    (bfs2 end (list (list start)) net))
 
- ;;;date parsing "13 Jun 1983"
- (defun parse-date1 (str month-parser)
-   (let ((tok (tokens str #'constituent 0)))
-     (list (parse-integer (first tok))
-	   (funcall month-parser  (second tok))
-	   (parse-integer (third tok)))))
- ;;one dim array - ie a vector
- (defconstant month-names
-   #("jan" "feb" "mar" "apr" "may" "jun" "jul" "aug" "sept" "oct" "nov" "dec"))
- ;;define parse-month
- (defun parse-month (str)
-   (let ((pos (position str month-names :test #'string-equal)))
-     (if pos
-	 (1+ pos) ;jan is the 1st month noth the 0th month
-	 nil)))
- ;;we use string-equal so that means that it's not case sensitive
- (defun parse-month1 (str)
-   (let ((pos (position str month-names :test #'string-equal)))
-     pos))
- (defun parse-date (str)
-   (let ((tok (tokens str #'constituent 0)))
-     (list (parse-integer (first tok))
-	   (parse-month   (second tok))
-	   (parse-integer (third tok)))))
- ;;use
- (parse-date "13 Jun 1984")
- (parse-date1 "13 Jun 1984" #'parse-month1)
+  ;another attempt
+  (defun bfs3 (end queue net curr-path)
+    (if (null queue)
+	curr-path
+	(let ((path (car queue)))
+	  (let ((node (car path)))
+	    (if (eql node end)
+		(progn
+		  (setf curr-path (reverse path))
+		  (bfs3 end
+			(cdr queue)
+			net
+			curr-path))
+		(bfs3 end
+		      (append (cdr queue)
+			      (new-paths path node net))
+		      net
+		      curr-path))))))
+  (defun longest-path3 (start end net)
+    (bfs3 end (list (list start)) net *matching-paths*))
 
- ;;use this to debug
- (defun read-integer-1 (str)
-   (if (every #'digit-char-p str) ;only proceed if every thing in string is a char
-       (let ((accum 0))
-	 (dotimes (pos (length str)) ;dotimes takes a (dotimes (x 5 "yo") (printf "hello")) ;
-	   (setf accum (+ (* accum 10)
-			  (digit-char-p (char str pos)))) ;with dotimes the value of pos increases each time
-	   (print pos))
-	 accum)
-       nil))
- (defun read-integer-1 (str)
-   (if (every #'digit-char-p str) ;only proceed if every thing in string is a char
-       (let ((accum 0))
-	 (dotimes (pos (length str)) ;dotimes takes a (dotimes (x 5 "yo") (printf "hello")) ;
-	   (setf accum (+ (* accum 10)
-			  (digit-char-p (char str pos))))) ;with dotimes the value of pos increases each time
-	 accum)
-       nil))
 
- ;;;4.6 structures
- (defun block-height (b) (svref b 0)) ;use (block-height #(1 2 3)) 2-d array looks like this #2A(1 1 2 3 blah)
- ;defstruct makes a structure
- ;think of a structure as a vector that all kinds of functions get defined for you
- (defstruct point
-   x
-   y)
- ;make-point point-p copy-point point-x point-y
- (setf p (make-point :x 0 :y 0))
- (point-x p) ; 0
- (point-y p) ; 0
- (setf (point-y p) 2) ;and check p now
- ;defiing a structure also defines a type of that name each point will be of type point, then structure then atom and then t.
- ;use point-p to see if something is a point as well as using the typep
 
- (defstruct polemic
-   (type (progn
-	   (format t "What kind of polemic was it? ")
-	   (read)))
-   (effect nil))
- ;make-polemic polemic-p copy-polemic polemic-type polemic-effect
- ;;use
- ;(setf pol1 (make-polemic)); this will make with whatever you say as type after the ;#S(POLEMIC :TYPE NEW :EFFECT NIL) ;type and effect are the keyworkds 
+  ;;;;CHAPTER 4 chapter 4 chap 4
+  ;arrays
+  ;make an array with the make-array function takes a list and can take an initial value
+  (setf arr (make-array '(2 3) :initial-element nil))
+  ;reference an array
+  (aref arr 0 0) ;=> nil since that's what we set it up to be in the previous step
+  ;set specific indices of an array
+  (setf (aref arr 0 1) 'B) ;pick (aref) the elemnt and then setf it
+  ;it's literally typed like this in lisp the literal version of an array ie in the terminal type this
+  ;#2A((NIL B NIL) (NIL NIL NIL))
+  ;same as if we typed wha tarray was
+  (setf *print-array* t) ;and set it to false to see the actual location of the arrray
 
- (defstruct (point1 (:conc-name p) ;says call me p instead of point1- gets replaced by p, and is more confusing
-		    (:print-function print-point)) ;says for printing use the function print-point (which is defined below) ;takes structure to be printed, place where is to be printed and a third arg which we can ignore
-   (x 0)
-   (y 0))
- ;;the above says call it p instead of point1- also the make-point1 and py and px will be used-
- (defun print-point1 (p stream depth)
-   (format stream "#<~A,~A>" (px p) (py p)))
- ;;use
- (setf pt1 (make-point1)) 
- (setf (px pt1) 3)
- (setf (py pt1) 'blah)
+  ;to make a one dim array - aka vector!!!- then just give a number instead of the array dimensions
+  (setf vec (make-array 4 :initial-element nil))
+  ;one d array is calle da vector! so call it with a vector
+  (vector "a" 'b 3 18)
+  ;svref stands for sv stands for "simple vector" - simple array not adjustable nor displaced nor has a fill-pointer. arrays are simple by default. simple vector is simple array one dim and elements of any type
+  (svref vec 0) 
+  (setf (svref vec 0) 20)
 
- ;;;binary search tree 4.7
+  ;;;; Utilities for operations on sorted vectors.
+
+  ;;; Finds an element in a sorted vector. 
+
+  (defun bin-search (obj vec)
+    (let ((len (length vec)))
+     ;; if a real vector, send it to finder
+      (and (not (zerop len))
+	   (finder obj vec 0 (1- len)))))
+
+  (defun finder (obj vec start end)
+    (format t "~A~%" (subseq vec start (1+ end)))
+    (let ((range (- end start)))
+      (if (zerop range)
+	  (if (eql obj (aref vec start)) ;or end in this case
+	      obj
+	      nil)
+	  (let ((mid (+ start (round (/ range 2)))))
+	    (let ((obj2 (aref vec mid)))
+	      (if (< obj obj2)
+		  (finder obj vec start (1- mid))
+		  (if (> obj obj2)
+		      (finder obj vec (1+ mid) end)
+		      obj))))))); if it's not less than and not > it must be the object!
+  (bin-search 3 #(0 1 2 3 4 5 6 7 8 9))
+
+  ;;strings are vectors of characters
+  ;;"string" #\c is the character c
+  (char< #\c #\d) ;T
+  (char> #\a #\A) ;T
+  (char<=  #\B #\a); T
+  (char/= #\a #\a);Nil ;this checks if they're different 
+  ;;returns the code for the character
+  (char-code #\a) ;97
+  ;returns the character for the code
+  (code-char 97) ; a
+  (sort "elbow" #'char<) ;accending order
+  (sort "asdflksaxcvjklj" #'char>) ;descending order 
+  ;;strings are vectors so sequence and array functions worn on them
+  (aref "abc" 1) ;#\b
+  ;;char is faster than aref
+  (char "abc" 1); #\b
+  ;;use setf with char (or aref) to replace elements
+  (defun my-str-manipulator (some-str)
+    (let ((str (copy-seq some-str)))
+      (setf (aref str 3) #\K) ;or (setf (char str 3)) #\k
+      str))
+  (equal "fred" "fred") ;T
+  (equal "fred" "Fred") ;nil
+  (string-equal "fred" "FRED"); T
+  ;;build a string with format
+  (format nil "~A or ~A" "truth" "dare")
+  ;concatenate takes a symbol and for the type of result, puls
+  (format nil (concatenate 'string "blah" "blue" "butts"))
+  ;;the type sequence includes both lists and vectors
+  ;;lists are sequences as are vectors (and a string is vector of chars)
+  (mirror? '(a b b a)) ; T
+  (mirror? "abba") ; T since both sequences!
+
+  ;get anything from any sequence
+  (elt '(a b c) 1)
+  (elt "abcd" 2) ;messes up if indexing out of range
+
+  ;using elt we could write a version of mirror? that would be faster
+  (defun mirror? (s)
+    (let ((len (length s)))
+      (and (evenp len)
+	   (do ((forward 0 (1+ forward)) ;2 variables set up forward
+		(back (1- len) (1- back))) ;another variable set up back starts at (- len 1) and we decrement it by one every time 
+	       ((or (> forward back) ;stop when forward is bigger than end or when
+		    (not (eql (elt s forward)
+			      (elt s back)))) ;the stopping conditions
+		(> forward back)))))) ;the second part of this is just to print something when the do macro is done
+  ;;;lists only allow sequential access where as vecotrs allow random access so it's just as cheap to reach
+  ;;;one element is as easy to get to as is any other element 
+  ;:key  identity T
+  ;:test eql 
+  ;:from-end nil
+  ;:start 0
+  ;:end nil
+  (position #\a "fantasia") ; 1
+  (position #\a "fantasia" :start 3 :end 5) ; 4
+  (position #\a "fantasia" :from-end t) ; with it set to t it'll be position number 7 from the start (not like 0 from end or anything weird)
+  (position 'a '((c d) (a b)) :key #'car) ;answer is 1!!! there are 2 total elements in there
+  ;;car will be applied to each element of a sequence before it's considered
+  ;;;so we ask for pos of first element whose car is the symbol a 
+  (position 'a '((b a) (c d a) (a b c)) :key #'car) ; 2
+  (position 'a '((b a) (c d a) (a b c)) :key #'cadr); 0
+  (position 'a '((b a) (c d a) (a b c)) :key #'caddr);1
+  (position 'a '((b a) (c d a) (Z b c)) :key #'car); nil
+  ;;:test takes 2 args in this case pg 64
+  (position '(a b) '((a b) (c d))) ; will be false since by default it uses eql!!!!! 
+  (position '(a b) '((a b) (c d)) :test #'equal) ;0 ie that's the position number
+  ;;can be a function of 2 args as well
+  ;;see how it compares to multiple things
+  (position 3 '(1 0 7 5) :test #'< ) ; 2
+  (position 3 '(8 9 5 6 4 1 7 5) :test #'> ) ;5 the fith position it's greater (> 3 1) == T 
+
+  ;;this way didn't work 
+  ;;couldn't find the #\  the space is needed 
+  ;(defun second-word (sting)
+  ;  (let ((p1 (+ (position #\ sting) 1)))
+  ;    (subseq sting p1 (position #\ sting :start p1))))
+
+  ;;try with the sapce character
+  (defun second-word (str)
+    (let ((p1 (+ (position #\space str) 1)))
+      (subseq str p1 (position #\space str :start p1))))
+  ;;use
+  (second-word "Form follows function.")
+  ;;;see if an element satisfies a predicate of one argument
+  ;;takes a function and a sequence and returns the position of the first element satisfying hte function:
+  (position-if #'oddp '(0 2 3 4 5)) ;2 since that's the position of the number 3 in that statment
+  ;find is like member and member-if for sequences
+  (find #\a "cat") ;returns #\a and not the rest of the characters
+  (find-if #'characterp "1ham") ;1 if we used "" then it would return nil - doesn't take :test
+  ;;find with :key is better than find-if
+  (defparameter *some-list* '((blue)(bunny)(complete)))
+  (find-if #'(lambda (x)
+	       (eql (car x) 'complete))
+	   *some-list*)
+  (find 'complete *some-list* :key #'car)
+  ;;leaves each last occurance of any element of a sequence
+  (remove-duplicates "abracadabra")
+
+  (reduce #'cons '(a b c d))
+  (reduce #'intersection '((b r a d ' s) (b a d) (c a t))) ; see the only thing common in all of them is a 
+  ;;;;4.5 parsing dates
+  (defun tokens (str test start)
+    (let ((p1 (position-if test str :start start)))
+      (if p1
+	  (let ((p2 (position-if #'(lambda (c)
+				     (not (funcall test c)))
+				 str
+				 :start p1)))
+	    (cons (subseq str p1 p2)
+		  (if p2
+		      (tokens str test p2)
+		      nil)))
+	  nil)))
+
+  (defun constituent (c)
+    (and (graphic-char-p c)
+	 (not (char= c #\space ))))
+
+
+
+  ;;see how this get's the first thing that isn't an alpha-char-p (like a space or a . or a $ or something)
+  (position-if #'(lambda (c) 
+		   (not (funcall 'alpha-char-p c))) 
+	       "9aas8dasdlj12#" 
+	       :start 1);4
+  (position-if #'(lambda (c) 
+		   (not (funcall 'alpha-char-p c))) 
+	       "9aas8dasdlj12#" 
+	       :start 5);11
+
+  ;;notice
+  (subseq "abc" 1 nil) ; "bc" see how with nil it's the same thing
+  (defun tokens1 (str test start)
+    (let ((p1 (position-if test str :start start)))
+      (if p1
+	  (let ((p2 (position-if #'(lambda (c)
+				     (not (funcall test c)))
+				 str
+				 :start p1)))
+	     (print p2))
+	  nil)))
+  ;;use - also notice that #'constituent or 'constituent works with funcall
+  (tokens "ab12 3cde.f
+	  gh" #'constituent 0)
+
+  ;;;date parsing "13 Jun 1983"
+  (defun parse-date1 (str month-parser)
+    (let ((tok (tokens str #'constituent 0)))
+      (list (parse-integer (first tok))
+	    (funcall month-parser  (second tok))
+	    (parse-integer (third tok)))))
+  ;;one dim array - ie a vector
+  (defconstant month-names
+    #("jan" "feb" "mar" "apr" "may" "jun" "jul" "aug" "sept" "oct" "nov" "dec"))
+  ;;define parse-month
+  (defun parse-month (str)
+    (let ((pos (position str month-names :test #'string-equal)))
+      (if pos
+	  (1+ pos) ;jan is the 1st month noth the 0th month
+	  nil)))
+  ;;we use string-equal so that means that it's not case sensitive
+  (defun parse-month1 (str)
+    (let ((pos (position str month-names :test #'string-equal)))
+      pos))
+  (defun parse-date (str)
+    (let ((tok (tokens str #'constituent 0)))
+      (list (parse-integer (first tok))
+	    (parse-month   (second tok))
+	    (parse-integer (third tok)))))
+  ;;use
+  (parse-date "13 Jun 1984")
+  (parse-date1 "13 Jun 1984" #'parse-month1)
+
+  ;;use this to debug
+  (defun read-integer-1 (str)
+    (if (every #'digit-char-p str) ;only proceed if every thing in string is a char
+	(let ((accum 0))
+	  (dotimes (pos (length str)) ;dotimes takes a (dotimes (x 5 "yo") (printf "hello")) ;
+	    (setf accum (+ (* accum 10)
+			   (digit-char-p (char str pos)))) ;with dotimes the value of pos increases each time
+	    (print pos))
+	  accum)
+	nil))
+  (defun read-integer-1 (str)
+    (if (every #'digit-char-p str) ;only proceed if every thing in string is a char
+	(let ((accum 0))
+	  (dotimes (pos (length str)) ;dotimes takes a (dotimes (x 5 "yo") (printf "hello")) ;
+	    (setf accum (+ (* accum 10)
+			   (digit-char-p (char str pos))))) ;with dotimes the value of pos increases each time
+	  accum)
+	nil))
+
+  ;;;4.6 structures
+  (defun block-height (b) (svref b 0)) ;use (block-height #(1 2 3)) 2-d array looks like this #2A(1 1 2 3 blah)
+  ;defstruct makes a structure
+  ;think of a structure as a vector that all kinds of functions get defined for you
+  (defstruct point
+    x
+    y)
+  ;make-point point-p copy-point point-x point-y
+  (setf p (make-point :x 0 :y 0))
+  (point-x p) ; 0
+  (point-y p) ; 0
+  (setf (point-y p) 2) ;and check p now
+  ;defiing a structure also defines a type of that name each point will be of type point, then structure then atom and then t.
+  ;use point-p to see if something is a point as well as using the typep
+
+  (defstruct polemic
+    (type (progn
+	    (format t "What kind of polemic was it? ")
+	    (read)))
+    (effect nil))
+  ;make-polemic polemic-p copy-polemic polemic-type polemic-effect
+  ;;use
+  ;(setf pol1 (make-polemic)); this will make with whatever you say as type after the ;#S(POLEMIC :TYPE NEW :EFFECT NIL) ;type and effect are the keyworkds 
+
+  (defstruct (point1 (:conc-name p) ;says call me p instead of point1- gets replaced by p, and is more confusing
+		     (:print-function print-point)) ;says for printing use the function print-point (which is defined below) ;takes structure to be printed, place where is to be printed and a third arg which we can ignore
+    (x 0)
+    (y 0))
+  ;;the above says call it p instead of point1- also the make-point1 and py and px will be used-
+  (defun print-point1 (p stream depth)
+    (format stream "#<~A,~A>" (px p) (py p)))
+  ;;use
+  (setf pt1 (make-point1)) 
+  (setf (px pt1) 3)
+  (setf (py pt1) 'blah)
+
+  ;;;binary search tree 4.7
  ;;a bst (is made of nodes - has a left a right) and can either be null or be null or anohter bst 
- ;node has left or right
+ ;;node has left or right
  (defstruct (node (:print-function ;special function needs an object, a stream (format function takes the stream) and depth (to be ignored)
 		   (lambda (n s d)
 		     (format s "#<~A>" (node-elem n))))) ;all the functions for the node see point1 example above ; node-elt is like node-l or node-r except the main element itself
@@ -1288,13 +1288,13 @@
 	     bst
 	     (if (funcall < obj elem) ;gets passed in as a function #'< in most cases (funcall #'< 3 4)
 		 (make-node
-		   :elem elem
-		   :l (bst-insert obj (node-l bst) <) ;the left node will be the one that has the new obj
-		   :r (node-r bst)) ;the right node will be same as it was for this node originally
+		  :elem elem
+		  :l (bst-insert obj (node-l bst) <) ;the left node will be the one that has the new obj
+		  :r (node-r bst)) ;the right node will be same as it was for this node originally
 		 (make-node
-		   :elem elem
-		   :r (bst-insert obj (node-r bst) <) ;the obj is bigger so it belongs on the right - so we remake the node with the left side being the same and the object placed on the right - if it fits that is
-		   :l (node-l bst))))))) ;this time the left side should be the same
+		  :elem elem
+		  :r (bst-insert obj (node-r bst) <) ;the obj is bigger so it belongs on the right - so we remake the node with the left side being the same and the object placed on the right - if it fits that is
+		  :l (node-l bst))))))) ;this time the left side should be the same
 
  (defun bst-find (obj bst <)
    (if (null bst) ;means we haven't found it
@@ -1314,13 +1314,19 @@
 	(or (bst-max (node-r bst)) bst)))
 
  (setf nums nil)
- ;(dolist (x '(5 8 4 2 1 9 6 7 3)) ;goes through each one and 
- ;  (setf nums (bst-insert x nums #'<))
- ;  (print x));goes one at a time and prints it
+					 ;(dolist (x '(5 8 4 2 1 9 6 7 3)) ;goes through each one and 
+					 ;  (setf nums (bst-insert x nums #'<))
+					 ;  (print x));goes one at a time and prints it
  (dolist (x '(5 8 4 2 1 9 6 7 3))
    (setf nums (bst-insert x nums #'<)))
  ;;use
  nums ;see how it uses the node 's :print-function notice how the current node is the one that gets printed
+
+
+(setf *nums1* nil)
+(dolist (x '(4 5 6))
+  (setf *nums1* (bst-insert x *nums1* #'<)))
+
 
  (defun bst-remove (obj bst <)
    (if (null bst)
@@ -1330,13 +1336,13 @@
 	     (percolate bst)
 	     (if (funcall < obj elem)
 		 (make-node
-		   :elem elem
-		   :l (bst-remove obj (node-l bst) <)
-		   :r (node-r bst))
+		  :elem elem
+		  :l (bst-remove obj (node-l bst) <)
+		  :r (node-r bst))
 		 (make-node
-		   :elem elem
-		   :l (node-l bst)
-		   :r (bst-remove obj (node-r bst) <)))))))
+		  :elem elem
+		  :l (node-l bst)
+		  :r (bst-remove obj (node-r bst) <)))))))
  ;;need to hande the case when a branch has things underneath it
  ;;something that percolates bubbles up
  (defun percolate (bst)
@@ -1347,10 +1353,10 @@
 	  (rperc bst)))
      ((null (node-r bst))
       (lperc bst))
-     (t
-       (if (zerop (random 2)) ;returns either 1 or 0 
-	   (lperc bst)
-	   (rperc bst)))))
+     (t 
+      (if (zerop (random 2)) ;returns either 1 or 0 
+	  (lperc bst)
+	  (rperc bst)))))
  ;;moves the right-side up
  (defun rperc (bst)
    (make-node :elem (node-elem (node-r bst))
@@ -1367,13 +1373,160 @@
  (setf nums (bst-remove 5 nums #'<))
  (bst-find 4 nums #'<)
 
-(defun bst-traverse (fn bst)
-  (when bst ;if condition is true it will do all of the following
-    (bst-traverse fn (node-l bst))
-    (funcall fn (node-elem bst))
-    (bst-traverse fn (node-r bst))))
+ (defun bst-traverse (fn bst)
+   (when bst ;if condition is true it will do all of the following
+     (bst-traverse fn (node-l bst))
+     (funcall fn (node-elem bst))
+     (bst-traverse fn (node-r bst))))
  ;;use
  (bst-traverse #'princ nums) ;princ just prints one object
+ (bst-traverse #'(lambda (x)
+		   (print  x))
+	       nums)
+
+;;;;;;;;;;;;;;sidetrack;;;;;;;;;;;;;;;
+ ;;do a breadth first traverse - make it work with numbers first -- see this doesnt' work but we can learn from it
+(defun bst-bft-helper (nodes)
+  (cond
+    ((null nodes) nil)
+    (t
+     (let ((curr (car nodes))
+	   (rest (cdr nodes)))
+       (progn
+	 (print curr)
+	 (bst-bft-helper (append1 rest (remove-if #'null (list (node-elem (node-r nums))
+							       (node-elem (node-l nums)))))))))))
+
+;;the traversal function without depths and knowing who the child is
+(defun bst-breadth-first (bst fn)
+  (bst-bft-helper (list bst) fn))
+;;no this won't work - see how the nums thing needs to be there
+(defun bst-bft-helper (nodes fn)
+  (cond 
+    ((null nodes) nil)
+    (t
+     (let ((curr (car nodes))
+	   (rest (cdr nodes)))
+       (progn 
+	 (funcall fn curr)
+	 (bst-bft-helper (append rest
+				 (remove-if #'null (list (valid-node (node-l curr))
+							 (valid-node (node-r curr)))))
+			 fn))))))
+
+;;returns either the current node back or returns nil
+;;see we don't actually need this
+(defun valid-node (node)
+  (cond
+    ((or (null node)
+	 (null (node-elem node)))
+     nil)
+    (t
+     node)))
+
+;;ignore this one
+;;another one with the - n current node - depth - acc (2 (a b)) means that at level 2 the 
+(defun bst-bft-depth-heler (n d acc)
+  (cond
+    ((null n) acc)
+    (t
+     (let ((curr (car n)))))))
+
+;;too complex			
+(defun new-children (child-nodes d)
+  (let* ((acc (1+ d)))
+    (mapcar #'(lambda (n)
+		(remove-if #'null (list (node-l n)
+					(node-r n))))
+	    child-nodes)))
+
+;;correct definition
+;;given a list of nodes 
+(defun new-children (child-nodes)
+  (mapcar #'(lambda (n)
+	      (remove-if #'null (list (node-l n) (node-r n))))
+	  child-nodes))
+
+;;given a node find all the children 
+(defun new-childs (node)
+  (remove-if #'null (list (node-r node) (node-l node))))
+
+;;given a list of nodes push them both out using an accumulator
+(defun childs-childs (nodes &optional d)
+  (let ((acc nil))
+    (dolist (n nodes)
+      (push (new-childs n) acc))
+    acc))
+
+(childs-childs (list nums)) ;((#<8> #<2>))
+(new-children (list nums))  ;((#<2> #<8>))
+
+;;say we have alist like so ( a (b)) how do we make it (a b)
+;;use reduce !
+(reduce #'append '((a b) (d e)))
+(reduce #'append '((a b) nil))
+(reduce #'append (new-children (list nums)))
+(new-childs nums)
+(new-children (list nums nums nums)) ;takes any list of nodes and finds all their children but returns them in a ( (a b) (c d) nil) type of list
+(reduce #'append (new-children (list nums nums nums))) ;this takes that weird list and makes it just a list of the child nodes
+(new-children (reduce #'append (new-children (reduce #'append (new-children (reduce #'append (new-children (list nums nums nums))))))));see how if we reduce this it goes back down 
+
+
+;;breadth first traversal - breadth first search binary tree
+(defun bst-bf-lists (node fn)
+  (bst-bft-helper2 (list node) fn))
+;Cond has an implicit progn
+;takes a list of nodes and then finds a list of it's children continues this until there are no more children
+(defun bst-bft-helper2 (nodes fn)
+  (cond
+    ((null nodes) nil)
+    (t
+     (funcall fn nodes) ;print the current list of nodes
+     (bst-bft-helper2 (reduce #'append (new-children nodes))
+		      fn))))
+;;takes a list of child nodes and for each of them will find all the children
+;; ((#<4> #<9>)) for example - notice with bst-bft-helper2
+(defun new-children (child-nodes)
+  (mapcar #'(lambda (n)
+	      (remove-if #'null (list (node-l n) (node-r n))))
+	  child-nodes))
+
+;;see how this prints out all the ones 
+(bst-bf-lists nums #'princ)
+(bst-bf-lists nums #'print)
+
+
+;;;more attempts gone awry
+;(defun new-children1 (child-nodes d)
+;  (let ((acc (list (1+ d))))
+;    (mapcar #'(lambda (n)
+;		      (cons n acc))
+;	    (mapcar #'(lambda (n)
+;			(remove-if #'null (list (node-l n)
+;						(node-r n))))
+;		    child-nodes))))
+
+;;no this won't work - see how the nums thing needs to be there
+(defun bst-bft-helper1 (nodes fn)
+  (cond 
+    ((null nodes) nil)
+    (t
+     (let ((curr (car nodes))
+	   (rest (cdr nodes)))
+       (progn 
+	 (funcall fn curr)
+	 (bst-bft-helper (append rest
+				 (remove-if #'null (list (node-l curr)
+							 (node-r curr))))
+			 fn))))))
+(defun bst-breadth-first1 (bst fn)
+  (bst-bft-helper1 (list bst) fn))
+;see how this is the same the whole valid node thing is bs
+(bst-breadth-first1 nums #'princ)
+
+;;;;;;;;;;;;;sidetrack;;;;;;;;;;
+
+
 
  ;;;Hash Tables
  ;;like fast associated pairs - assoc - used when under 10 elements else use this
@@ -3779,15 +3932,15 @@
  ;;;*standard-input* - to read from the stream
  ;;;*standard-output* - default place for output` 
  ;;;7.1 - streams
-(setf path (make-pathname :name "myfile.txt")); pathname
+(setf path (make-pathname :name "/Users/aliya/lisp/lisp/myfile.txt")) ; pathname
 (setf str (open path :direction :output
-		:if-exists :supersede)); stream gets overwritten
-(format str "Something~%"); if we give this stream to format it will print it to that file
-(format str "and this as well~%"); now write to this stream (which isn't the defaut terminal anymore)
+		:if-exists :supersede)) ; stream gets overwritten
+(format str "Something~%") ; if we give this stream to format it will print it to that file
+(format str "and this as well~%") ; now write to this stream (which isn't the defaut terminal anymore)
 (close str)
 (setf str (open path :direction :input))
 (read-line str)
-(read-line str); done the second time to show that we can get the second line as well.
+(read-line str) ; done the second time to show that we can get the second line as well.
 (close str)
 (with-open-file (str path :direction :output
 		     :if-exists :append) ;found this by hyperspec it said it uses the same args as open
@@ -3806,7 +3959,7 @@
 	((eql line 'eof)); the stopping condition for 
       (format t "~A~%" line)))) ; the with-open-file 
 ;;test it out
-(pseudo-cat "myfile.txt")
+(pseudo-cat "/Users/aliya/lisp/lisp/myfile.txt")
 
 					;(defun ask-read ()
 					;  (read))
@@ -3978,10 +4131,14 @@ my-buf
 	     (setf pos 0))))
     (buf-flush buf out)))
 
-(file-subst "baro" "baric" "~/lisp/pg/myfile.txt" "~/lisp/pg/outputfile.txt")
-(file-subst "bar" "XxxxX" "~/lisp/pg/myfile.txt" "~/lisp/pg/outputfile.txt")
+;;;;;;;;;;;;;;;;;;;;test and change paths;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;these won't work on every operating system so test them out
+;(file-subst "baro" "baric" "~/lisp/pg/myfile.txt" "~/lisp/pg/outputfile.txt")
+;(file-subst "bar" "XxxxX" "~/lisp/pg/myfile.txt" "~/lisp/pg/outputfile.txt")
 					;(step (file-subst "baro" "baric123456" "~/lisp/pg/myfile.txt" "~/lisp/pg/outputfile.txt"))
-(file-subst " th" " z" "test1" "test2")
+;(file-subst " th" " z" "test1" "test2")
+
+
 ;;file with word barbarous
 ;;sub "baro" baric
 
@@ -4096,7 +4253,8 @@ my-buf
 	(push line list-strings)))))
 
 (setf *teststrings* nil)
-(setf *teststrings* (file-to-list "myfile.txt")) ;this duplicates it, we need something else
+
+;(setf *teststrings* (file-to-list "myfile.txt")) ;this duplicates it, we need something else
 
 
 
@@ -4116,9 +4274,9 @@ my-buf
 
 
 (setf *teststrings3* nil)
-(setf *teststrings3* (lines->list "myfile.txt"))
+;(setf *teststrings3* (lines->list "myfile.txt"))
 *teststrings3*
-(setf *teststrings3* (lines->list2 "myfile.txt"))
+;(setf *teststrings3* (lines->list2 "myfile.txt"))
 *teststrings3*
 
 ;;the let-over-lamda ends up saving the previous state! like a logger! seeems like cool
@@ -4132,7 +4290,7 @@ my-buf
 	  ((eql line 'eof) list-strings)
 	(push line list-strings)))))
 
-(setf *teststrings* (file-to-list "myfile.txt"))
+;(setf *teststrings* (file-to-list "myfile.txt"))
 (first *teststrings*) ;see how this works no matter how many times you call the above command in a row (unlike usinng the let-over-lambda since that saves the var)
 
 (defun file-to-strings (path)
@@ -4160,7 +4318,7 @@ my-buf
 (setf *teststrings4* nil)
 ;;;;(setf *teststrings4* (file-to-s-expressions "exprfile.txt")) ; but this doesn't work!! causes errors still
 *teststrings4*
-(setf *teststrings4* (s->lists "exprfile.txt")) ; see this works 
+;(setf *teststrings4* (s->lists "exprfile.txt")) ; see this works 
 
 
 
@@ -4205,6 +4363,9 @@ my-buf
 					;lets test this now
 					;basically to clone we need git clone git://github.com/ajivani/lisp.git nameofgitfolder
 					;then it automatically downloads stuff here!
+;;git add .
+;;git commit -m "some comment on the commit"
+;;git push -u origin master
 
 ;;7-4 - function that takes a 2d array of floats and displays it in neat columns
 
