@@ -4353,7 +4353,7 @@ my-buf
 					;git init
 					;git add README.md ; or use "git add ." to add everything in this folder
 					;git commit -m "first commit"
-					;git remote add origin https://github.com/ajivani/lisp.git
+	     ;git remote add origin https://github.com/ajivani/lisp.git
 					;git push -u origin master
 
 					;Push an existing repository from the command line
