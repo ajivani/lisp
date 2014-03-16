@@ -1495,6 +1495,32 @@
 (bst-bf-lists nums #'princ)
 (bst-bf-lists nums #'print)
 
+;;is there a function we can pass that will also print out the level
+(let ((depth 0)
+      (depthlist '()))
+  (defun reset-depth ()
+    (setf depth 0))
+  (defun reset-depthlist ()
+    (setf depthlist '()))
+  (defun ret-depthlist()
+    depthlist)
+  (defun add-depths (node-list)
+    (cond
+      ((null node-list) nil)
+      (t
+       (push (append (list (1+ depth)) node-list) depthlist)
+       (setf depth (1+ depth))))))
+
+;;this shit
+(defun show-depths (bst)
+  (progn
+    (reset-depth)
+    (reset-depthlist)
+    (bst-bf-lists bst #'add-depths)))
+
+(show-depths nums)
+(ret-depthlist) ;;((4 #<1> #<7>) (3 #<3> #<6> #<9>) (2 #<2> #<8>) (1 #<4>))
+(reverse (ret-depthlist)) ;;((1 #<4>) (2 #<2> #<8>) (3 #<3> #<6> #<9>) (4 #<1> #<7>))
 
 ;;;more attempts gone awry
 ;(defun new-children1 (child-nodes d)
@@ -4362,7 +4388,7 @@ my-buf
 
 					;lets test this now
 					;basically to clone we need git clone git://github.com/ajivani/lisp.git nameofgitfolder
-					;then it automatically downloads stuff here!
+					 ;then it automatically downloads stuff here!
 ;;git add .
 ;;git commit -m "some comment on the commit"
 ;;git push -u origin master
