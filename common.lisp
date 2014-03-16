@@ -4515,3 +4515,18 @@ my-buf
     (keyword:pig :oink))) ;see how 
 
 ;;symbols related to vars 2 ways - symb name of a special var, the value of the variable is stored in a field within the sybmol itself liek the (figure 8.1 drawing)
+
+;;Random Text exmample 8-8
+;;two parts - part one will read a sample text accumulating info on likelihood of one word following another
+;;part one make a hashtable with key as a word and values as words that follow it
+;; key |discover| and value ((|sin| . 1) (|wide| . 2) (|sights| . 1))
+;;part 2 - make a random walk and choose the next word based on previous words
+
+;;--part 1
+(defparameter *words* (make-hash-table :size 10000));will contain our hashtable of keys and values 
+
+(defconstant maxword 100); biggest word
+
+(defun read-text (pathname)
+  (with-open-file (s pathname :direction :input)
+    (let ((buffer (make-string max
