@@ -1041,6 +1041,35 @@
 		      obj))))))); if it's not less than and not > it must be the object!
   (bin-search 3 #(0 1 2 3 4 5 6 7 8 9))
 
+
+;;these are all distructive
+(defun reverse-vector (vec)
+  (reverse-vec-helper vec 0 (truncate (/ (length vec) 2)) (1- (length vec))))
+
+(defun reverse-vec-helper (vec low mid high)
+  (do ((i low (+ 1 i)))
+      ((= i mid))
+    (progn
+      (let* ((temp (aref vec i)))
+	(setf (aref vec i) (aref vec (- high i)))
+	(setf (aref vec (- high i)) temp))))
+  vec)
+
+(defun reverse-vec2 (vec)
+  (reverse-vec-helper2 vec 0 (1- (length vec))))
+
+(defun reverse-vec-helper2 (vec st end)
+  (cond
+    ((>= st end) vec)
+    (t
+     (let ((temp (aref vec end)))
+       (progn
+	 (setf (aref vec end) (aref vec st))
+	 (setf (aref vec st) temp)
+	 (reverse-vec-helper2 vec (1+ st) (1- end)))))))
+  
+
+
   ;;strings are vectors of characters
   ;;"string" #\c is the character c
   (char< #\c #\d) ;T
@@ -4522,11 +4551,365 @@ my-buf
 ;; key |discover| and value ((|sin| . 1) (|wide| . 2) (|sights| . 1))
 ;;part 2 - make a random walk and choose the next word based on previous words
 
+;;see how intern below works
+(intern "random-symbol") ;|random-symbol| ;makes this string into a symbol
+(assoc '|.| '( (silly . 1) (|.| . 3)  (|!| . 1) (nice . 1))) ; (|.| . 3)
+(assoc 'boy '( (silly . 1) (boy . 3)  (said . 1) (nice . 1)))
 ;;--part 1
-(defparameter *words* (make-hash-table :size 10000));will contain our hashtable of keys and values 
+(defparameter *words* (make-hash-table :size 10000)) ;Will Contain our hashtable of keys and values 
 
-(defconstant maxword 100); biggest word
+(defconstant maxword 100) ; biggest word
 
 (defun read-text (pathname)
   (with-open-file (s pathname :direction :input)
-    (let ((buffer (make-string max
+    (let ((buffer (make-string maxword))
+	  (pos 0))
+      (do ((c (read-char s nil :eof)
+	      (read-char s nil :eof)))
+	  ((eql c :eof))
+	(if (or (alpha-char-p c) (char= c #\'))
+	    (progn
+	      (setf (aref buffer pos) c)
+	      (incf pos))
+	    (progn
+	      (unless (zerop pos)
+		(see (intern (string-downcase
+			      (subseq buffer 0 pos)))) ;check symbol and add it in
+		(setf pos 0))
+	      (let ((p (punc c)))
+		(if p (see p))))))))) ;treat it as a separate 
+
+(defun punc (c)
+  (case c
+    (#\. '|.|) (#\, '|,|) (#\; '|;|)
+    (#\! '|!|) (#\? '|?|)))
+
+;;eg the gethash would return something like the following:
+;;((|sin| . 1) (|wide| . 2) (|sights| . 1))
+;;we pick the current symbol and 
+(let ((prev `|.|))
+  (defun see (symb)
+    (let ((pair (assoc symb (gethash prev *words*)))) ; (boy . 3)
+      (if (null pair)
+	  (push (cons symb 1) (gethash prev *words*)) ;add word to the values
+	  (incf (cdr pair))))
+    (setf prev symb)))
+
+(dolist (x '("the" "quick" "and" "the" "dead" "." "the" "bold" "and" "the" "beautiful"))
+  (prin1 (intern x))
+  (see (intern x)))
+
+
+(defun quick-hash-print (ht)
+  (maphash #'(lambda (k v)
+	       (format t "~A -- ~A  " k v))
+	   ht))
+;(quick-hash-print *words*)
+;quick review on cycling through a hash table
+(maphash (compose #'(lambda (k v) (format t " ~A:~A " k v)))
+	 *words*)
+
+(defun quick-hash (ht)
+  (maphash #'(lambda (k v)
+	       (progn
+		 (princ k)
+		 (princ v)
+		 (print " ----- ")))
+	   ht))
+(quick-hash *words*)
+(see (intern "the"))
+
+;;now for part 2 - uses a random-next to geerate a new word using 
+(defun generate-text (n &optional (prev '|.|)) ;optional value with '|.| as the first value
+  (if (zerop n)
+      (terpri) ;simple output function like princ - probably prints just a new line
+      (let ((next (random-next prev)))
+	(format t "~A " next)
+	(generate-text (1- n) next))))
+
+(defun random-next (prev)
+  (let* ((choices (gethash prev *words*))
+	 (i (random (reduce #'+ choices
+			    :key #'cdr))))
+    (dolist (pair choices)
+      (if (minusp (decf i (cdr pair))) ;like saying if i - frequency of pair  < 0 then pick this one - since i is random sometimes the less likely thing will also get picked
+	  (return (car pair))))))
+
+
+;;used this to understand what was going on
+(reduce #'+ (gethash '|.| *words*) :key #'cdr)
+(gethash '|.| *words*) ;((|the| . 1))
+(reduce #'princ (gethash '|.| *words*)) ;(|the| . 1)
+(reduce #'princ (gethash '|.| *words*) :key #'cdr) ; 1
+(reduce #'+ (gethash '|.| *words*) :key #'cdr) ;1 but if we had multiple numbers then the sum adds up and we pick a random number between 0 and the sum
+;(read-text "path-to-textfile")
+;(generate-text 10)
+
+;;exercise 8-1
+;;yes it's possible if they belong to 
+(eql 'a 'a) ;T unless they belong to different packages
+
+
+;;random side problem 1 - random 1-1
+;Use the number 5 and print all possible sums
+;( 1 1 1 1 1)
+;( (1 1) 1 1 1)
+;( (1 1) (1 1) 1)
+;( (1 1) (1 1) (1 1)); fails
+;( (1 1 1) 1 1)
+;( (1 1 1) (1 1))
+;( (1 1 1) (1 1 nil));fails
+;( (1 1 1 1) 1)
+;( (1 1 1 1) (1 1 1 1); fails
+
+(defun expand-nums (n)
+  (let ((l '()))
+    (expand-nums-helper n l)))
+
+(defun expand-nums-helper (n li)
+  (cond
+    ((eql 0 n) li)
+    (t
+     (expand-nums-helper (1- n) (push '1 li)))))
+
+
+;;;chapter 9 - numbers (alomst at macros chapter)
+
+(mapcar #'float '(1 2/3 .5)) 
+(truncate 1.3)
+(floor 1.4) ;ret 1 and the diff
+(ceiling 1.4) ;ret 2 and the diff
+
+;using floor and celing we can simplify the def of mirror? we saw earlier
+(defun palindrome? (x)
+  (let ((mid (/ (length x) 2)))
+    (equal (subseq x 0 (floor mid))
+	   (reverse (subseq x (ceiling mid))))))
+
+(palindrome? "racecar")
+
+(defun our-truncate (n)
+  (if (> n 0)
+      (floor n)
+      (ceiling n)))
+(our-truncate -1.34)
+(truncate -1.34)
+
+;round returns the nearest even digit
+(mapcar #'round '(-2.5 -1.5 1.5 2.5 2.9 3.1))
+(mapcar #'signum '(-2 -0.0 0.0 0 .5 3))
+(* (abs -.3) (signum -.3)) ; always returns x 
+(list (minusp -0.0) (zerop -0.0))
+(/ 365 12) ;gives a ratio
+(float 365/12) ;gives the float of the ratio
+(expt 2 5) ; 2^5
+(log 32 2) 
+(exp 1) ;is e ^ 1
+(exp 2)
+(expt 27 1/3) ;use this to find roots
+(expt 49 1/2) ;see
+(sqrt 49) ;it is faster
+;;trig functions
+(let ((x (/ pi 4)))
+  (list (sin x) (cos x) (tan x)))
+(let ((x (/ pi 2)))
+  (list (sin x) (cos x) (tan x)))
+
+(values most-positive-fixnum)
+(values most-negative-fixnum)
+
+(typep 1 'fixnum)
+(typep most-positive-fixnum 'fixnum)
+(typep (1+ most-positive-fixnum) 'bignum)
+
+;;ray tracing - define an eye, light source(s), surfaces, image plane
+;;projection of the world into the image plane
+
+;;figure 9-2 9.2 some math utilities
+
+
+(defun sq (x) (* x x))
+;;magnitude - lenght of a vector given it's coordinates - think size of arrow
+(defun mag (x y z)
+  (sqrt (+ (sq x) (sq y) (sq z))))
+;;just do a quick video on khan academy on unit vectors - 1/|V| * |V| = 1 - scalar times the vector equals 1 that is what the unit vector is
+(defun unit-vector (x y z)
+  (let ((d (mag x y z)))
+    (values (/ x d) (/ y d) (/ z d))))
+
+;the magnitude of any unit vector is 1.0 by definition 
+(multiple-value-call #'mag (unit-vector 23 12 478)) ;1.0 
+(mag (/ 23 (mag 23 12 478)) (/ 12 (mag 23 12 478)) (/ 478 (mag 23 12 478))) ;1.0
+
+;;fig 9.3 when we use :conc-name it means we can call just use the name given
+(defstruct (point (:conc-name nil))
+  x y z)
+
+(defun distance (p1 p2)
+  (mag (- (x p1) (x p2))
+       (- (y p1) (y p2))
+       (- (z p1) (z p2))))
+
+(defun minroot (a b c)
+  (if (zerop a)
+      (/ (- c) b)
+      (let ((disc (- (sq b) (* 4 a c))))
+	(unless (minusp disc)
+	  (let ((discrt (sqrt disc)))
+	    (min (/ (+ (- b) discrt) (* 2 a))
+		 (/ (- (- b) discrt) (* 2 a))))))))
+
+
+;;;now make the surface
+(defstruct surface color)
+
+(defparameter *world* nil)
+(defconstant eye (make-point :x 0 :y 0 :z 200))
+
+(defun tracer (pathname &optional (res 1))
+  (with-open-file (p pathname :direction :output :if-exists :supersede)
+    (format p "P2 ~A ~A 255" (* res 100) (* res 100))
+    (let ((inc (/ res)))
+      (do ((y -50 (+ y inc)))
+	  ((< (- 50 y) inc))
+	(do ((x -50 (+ x inc)))
+	    ((< (- 50 x) inc))
+	  (print (color-at x y) p))))))
+
+(defun color-at (x y)
+  (multiple-value-bind (xr yr zr)
+                       (unit-vector (- x (x eye))
+				    (- y (y eye))
+				    (- 0 (z eye)))
+    (round (* (sendray eye xr yr zr) 255))))
+
+(defun sendray (pt xr yr zr)
+  (multiple-value-bind (s int) (first-hit pt xr yr zr)
+    (if s
+	(* (lambert s int xr yr zr) (surface-color s)) ;intensity * color
+	0))) ;means a miss and should be black (ie we get the background)
+
+(defun first-hit (pt xr yr zr)
+  (let (surface hit dist)
+    (dolist (s *world*)
+      (let ((h (intersect s pt xr yr zr)))
+	(when h
+	  (let ((d (distance h pt)))
+	    (when (or (null dist) (< d dist))
+	      (setf surface s hit h dist d))))))
+    (values surface hit)))
+
+(defun lambert (s int xr yr zr)
+  (multiple-value-bind (xn yn zn) (normal s int)
+    (max 0 (+ (* xr xn) (* yr yn) (* zr zn)))))
+
+;;Figure 9.5
+(defstruct (sphere (:include surface))
+  radius center)
+
+(defun defsphere (x y z r c)
+  (let ((s (make-sphere
+	    :radius r
+	    :center (make-point :x x :y y :z z)
+	    :color c)))
+    (push s *world*)
+    s))
+;;typecase (cube #'cube-intersect) if we needed to add to this - depending on the type of s we can make it a sphere if we want
+(defun intersect (s pt xr yr zr)
+  (funcall (typecase s (sphere #'sphere-intersect))
+	   s pt xr yr zr))
+
+(defun sphere-intersect (s pt xr yr zr)
+  (let* ((c (sphere-center s))
+	 (n (minroot (+ (sq xr) (sq yr) (sq zr))
+		     (* 2 (+ (* (- (x pt) (x c)) xr)
+			     (* (- (y pt) (y c)) yr)
+			     (* (- (z pt) (z c)) zr)))
+		     (+ (sq (- (x pt) (x c)))
+			(sq (- (y pt) (y c)))
+			(sq (- (z pt) (z c)))
+			(- (sq (sphere-radius s)))))))
+    (if n
+	(make-point :x (+ (x pt) (* n xr))
+		    :y (+ (y pt) (* n yr))
+		    :z (+ (z pt) (* n zr))))))
+
+(defun normal (s pt)
+  (funcall (typecase s (sphere #'sphere-normal))
+	   s pt))
+
+(defun sphere-normal (s pt)
+  (let ((c (sphere-center s)))
+    (unit-vector (- (x c) (x pt))
+		 (- (y c) (y pt))
+		 (- (z c) (z pt)))))
+
+
+(defun ray-test (&optional (res 1))
+  (setf *world* nil)
+  (defsphere 0 -300 -1200 200 .8)
+  (defsphere -80 -150 -1200 200 .7)
+  (defsphere 70 -100 -1200 200 .9)
+  (do ((x -2 (1+ x)))
+      ((> x 2))
+    (do ((z 2 (1+ z)))
+	((> z 7))
+      (defsphere (* x 200) 300 (* z -400) 40 .75)))
+  (tracer (make-pathname :name "/Users/aliya/lisp/lisp/spheres.pgm") res))
+
+;(ray-test 4)
+
+
+
+
+;;random side problem 2 - random 2
+;;find power of n using the divide and conquer
+;;using mit open courseware lesson 3 - Introduction to algorithms (2005)
+(eql (* (exp 2.4) (exp 2)) (exp (+ 2.4 2))) ;T
+(eql (exp 5) (* (exp (/ (- 5 1) 2)) (exp (/ (- 5 1) 2)) (exp 1))) ;T
+;;note that (n-1)/2 would have to be even if n were odd
+;;and that we can use n/2 if n is even and (n-1)/2 if n is odd
+;;x^n = x^(n/2) * x^(n/2) if n is even
+;;x^n = x^((n-1)/2) *  x^((n-1)/2) * x if x is odd
+
+;;well no point dividing and conconquering if you're doing the recursive call twice!
+(defun find-powers-d&c (x n)
+  (cond
+    ((eql 0 n) 1)
+    ((eql 1 n) x)
+    (t
+     (if (evenp n)
+	 (* (find-powers-d&c x (/ n 2)) (find-powers-d&c x (/ n 2)))
+	 (* (find-powers-d&c x (/ (- n 1) 2)) (find-powers-d&c x (/ (- n 1) 2)) x)))))
+
+;;make it faster - why use two recursive calls when you only need to use 1 and 
+;;in case n is odd you use 1 recursive call and two multiplicaiton calls
+(defun find-powers (x n)
+  (cond
+    ((eql 0 n) 1)
+    ((eql 1 n) x)
+    (t
+      (cond 
+	((evenp n)
+	 (let ((recurse-val (find-powers x (/ n 2))))
+	   (* recurse-val recurse-val)))
+       (t
+	(let ((recurse-val (find-powers x (/ (- n 1) 2))))
+	  (* recurse-val recurse-val x)))))))
+
+	
+	 
+;;random question 3 - random 3 - find max subarray
+;;in book "Introduction to Algorithms" - Thomas C Corman
+;;using divide and conquer - find the max crossing array
+;;find the max left
+;;find the max right
+;;one of those 3 will be the overall max
+(setf *pricesperday* (vector 13 -3 -25 20 -3 -16 -23 18 20 -7 12 -5 -22 15 -4 7))
+
+(defun find-max-crossing-subarray (A low mid high)
+  (let ((left-sum -10000)
+	(sum 0)) 
+    (do ((i mid (1- i)))
+	((eql i low)))))
+      
