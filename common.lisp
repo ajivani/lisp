@@ -4844,7 +4844,7 @@ my-buf
 		 (- (y c) (y pt))
 		 (- (z c) (z pt)))))
 
-
+;;mess with the spheres 
 (defun ray-test (&optional (res 1))
   (setf *world* nil)
   (defsphere 0 -300 -1200 200 .8)
@@ -4859,9 +4859,55 @@ my-buf
 
 ;(ray-test 4)
 
+;;ex 9-1 takes a list of reals and returns true iif they are in non-decreasing order
+(defun decreasing-realsp (l)
+  (cond
+    ((null l) nil)
+    (t
+     (let ((c (car l))
+	   (ret t))
+       (dolist (r (cdr l))
+	 (if (>= c r) 
+	     (setf c r)
+	     (return (setf ret nil))))
+       ret))))
 
+(decreasing-realsp '())
+(decreasing-realsp '(2.0 1.9 1.1 1.2 0.9))
+(decreasing-realsp '(2.0 1.9 1.112))
 
+;;an even easier one!
+(defun decreasing-realsp2 (l)
+  (apply #'>= l)) ;;sees if current element is > or equal to the previous one
 
+(decreasing-realsp2 '(2.0 1.9 1.1 1.01 1.012))
+
+;;ex 9-2 takes interger number of cents and returns 4 vals on how to make that numer using .25 .10 .5 .1 cents
+(defun make-change (value)
+  (let ((money '(25 10 5 1))
+	(new-val (* 100 value)))
+    (dolist (x money)
+      (multiple-value-bind (c val) (change-helper new-val x)
+	(progn
+	  (setf new-val val)
+	  (format t "Unit ~A: ~A~%" x c))))))
+
+(defun change-helper (value den)
+  (let* ((c (truncate (/ value den)))
+	 (new-val (- value (* c den))))
+    (values c new-val)))
+
+(make-change 1.89)
+
+;;ex 9-3 simulate contest
+(defun sim-contest (&rest args)
+  (let* ((res (map-int #'(lambda (x) (random 2)) 10))
+	 (wi (apply #'+ res))
+	 (wag (- 10 wi)))
+    (values wi wag)))
+
+;;ex 9-4 - screw it macro time!
+    
 ;;random side problem 2 - random 2
 ;;find power of n using the divide and conquer
 ;;using mit open courseware lesson 3 - Introduction to algorithms (2005)
@@ -4913,3 +4959,4 @@ my-buf
     (do ((i mid (1- i)))
 	((eql i low)))))
       
+;;;;;;;;;;Chapter 10 macros ch 10;;;;;;;
