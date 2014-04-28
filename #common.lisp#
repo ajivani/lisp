@@ -5003,7 +5003,7 @@ my-buf
 
 (macroexpand-1 '(nil! x)); takes a macro call and generates it's expansion
 
-;;here is what macroexpand-1 is really doing
+
 (funcall #'(lambda (expr)
 	    (apply #'(lambda (x) (list 'setf x nil))
 		   (cdr expr)))
