@@ -5007,4 +5007,72 @@ my-buf
 (funcall #'(lambda (expr)
 	    (apply #'(lambda (x) (list 'setf x nil))
 		   (cdr expr)))
-	 '(nil! *x*))
+	 '(nil! *x*)); (SETF *X* NIL)
+
+;;could be something like 
+(apply #'+ 3) ;but instead
+(apply #'(lambda (x) (+ x 1))
+       '(1))
+;;causes an error without the quote but with the quote it produces the function below
+(apply #'(lambda (x) (list 'setf x nil))
+      '(*x*)); (setf *x* nil)
+;;ooh confused check out how ' makes it into code and not value
+(funcall #'(lambda (x) (list '+ x 'x x x 'x 1)) 200); (+ 20 X 20 20 X 1)
+(list (+ 1 1) '(+ 1 1)) ;(2 (+ 1 1)) ;see how one is the value of 1+1 and one is the list (+ 1 1)
+
+(funcall #'(lambda (a b c) (list a b c))
+	 'setf
+	 'x
+	 'nil) ; (SETF X NIL) pretty cool huh
+;;backquote
+`(a b c) ; by itself same as regular quote
+;;but backquotes can be used with commas to evaluate the function
+;;can use , and ,@ (comma-at) to turn on evaluation
+(setf a 1 b 2)
+`(a is ,a and b is ,b) ;(A IS 1 AND B IS 2)
+
+;;lets us define nil! witht he backquote and x - exaclty as we wanted it
+(defmacro nil! (x)
+  `(setf ,x nil))
+
+(macroexpand-1 '(nil! x))
+
+(nil! a)
+
+(setf *testlst* '(a b c))
+;; , with a backquote
+`(*testlst* is ,*testlst*); (*TESTLST* IS (A B C))
+;;comma-at ,@ with a backquote will show the 
+`(*testlst* is ,@*testlst*) ;(*TESTLST* IS A B C)
+`(lst is ,lst)
+`(comma-at lst is ,@lst)
+
+
+;;this is like while (test) (body1) (body2) (body3) -- basically we make a list
+;;of lists that 
+(defmacro while (test &rest body)
+  `(do ()
+       ((not ,test))
+     ,@body))
+
+;;now use the macro - see how the first set of () is a the test
+;;and the sets of () that come after will be the 
+(let ((x 0))
+  (while (< x 10) ; test is (< x 10) in this case
+    (princ x)     ;body notice anything after the first () will be 
+    (incf x)))    ;body 
+
+(macroexpand-1 '(let ((x 0))
+		 (while (< x 10)
+		   (princ x)
+		   (incf x)))); didn't work
+;this works
+(let ((x 0))
+  (macroexpand-1 '(while (< x 10)
+		   (princ x)
+		   (incf x)))) ;(DO () ((NOT (< X 10))) (PRINC X) (INCF X))
+
+;;quick git review -- setup already exists
+;;git add .                            --will add all the files
+;;git commit -m "some commit comment"  --commits it to the master branch
+;;git push                             --will push it ot github
