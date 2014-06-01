@@ -5115,3 +5115,49 @@ my-buf
       (if (> (- b l) 1) (quicksort1 vec l b)) 
       (if (> (- r a) 1) (quicksort1 vec a r)))
     vec))
+
+;;one more time for practice - just to see if i understand quicksort
+(defun quicksort2 (vec l r)
+  (let ((a l)
+	(z r)
+	(p (svref vec (round (+ 1 r) 2))))
+    (while (<= a z)
+      (while (< (svref vec a) p) (incf a))
+      (while (< p (svref vec z)) (decf z))
+      (when (<= a z) ;;means we found something that needs to switch
+	(rotatef (svref vec a) (svref vec z))
+	(incf a)
+	(decf z))
+	(if (> (- z l) 1) (quicksort2 vec l z))
+	(if (> (- r a) 1) (quicksort2 vec a r)))
+    vec))
+
+;;see if it works again
+(quicksort2 *v1* 0 (1- (length *v1*)))
+   
+;;;MACRO DESIGN
+;;ntimes macro - works like this -  (ntimes 10 (princ "."))
+
+;;incorrect
+(defmacro ntimes (n &rest body)
+  `(do ((x 0 (+ x 1)))
+       ((>= x ,n))
+     ,@body))
+;;seems to work
+(let ((y 10))
+  (ntimes y
+    (princ ".")))
+;;but when we change the let var to x it conflicts with the internal x in the defmacro!
+(let ((x 10))
+  (ntimes x
+    (princ "."))) ;doesn't work!!
+;;here's a better example of it not working
+(let ((x 100))
+  (ntimes 7
+    (setf x (+ x 1))
+    (princ x))
+  x) ;  100 is returned! instead of 107 
+
+(let ((x 100))
+  (pprint (macroexpand-1 '(ntimes 7
+		   (setf x (+ x 1))))))
