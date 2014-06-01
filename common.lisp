@@ -5001,7 +5001,7 @@ my-buf
 (setf *x* 1)
 (nil! *x*)
 
-(macroexpand-1 '(nil! x)); takes a macro call and generates it's expansion
+(macroexpand-1 '(nil! x)) ; takes a macro call and generates it's expansion
 
 ;;here is what macroexpand-1 is really doing
 (funcall #'(lambda (expr)
@@ -5010,7 +5010,7 @@ my-buf
 	 '(nil! *x*)); (SETF *X* NIL)
 
 ;;could be something like 
-(apply #'+ 3) ;but instead
+(apply #'+ '(3)) ;but instead
 (apply #'(lambda (x) (+ x 1))
        '(1))
 ;;causes an error without the quote but with the quote it produces the function below
@@ -5059,7 +5059,7 @@ my-buf
 ;;and the sets of () that come after will be the 
 (let ((x 0))
   (while (< x 10) ; test is (< x 10) in this case
-    (princ x)     ;body notice anything after the first () will be 
+    (print x)     ;body notice anything after the first () will be 
     (incf x)))    ;body 
 
 (macroexpand-1 '(let ((x 0))
@@ -5072,7 +5072,46 @@ my-buf
 		   (princ x)
 		   (incf x)))) ;(DO () ((NOT (< X 10))) (PRINC X) (INCF X))
 
+(let ((x 0))
+  (pprint (macroexpand-1 '(while (< x 10)
+		   (princ x)
+		   (incf x))))) ;lol not printed prettier
+
 ;;quick git review -- setup already exists
 ;;git add .                            --will add all the files
 ;;git commit -m "some commit comment"  --commits it to the master branch
 ;;git push                             --will push it ot github
+
+(defun quicksort (vec l r)
+  (let ((i l)
+	(j r)
+	(p (svref vec (round (+ 1 r) 2)))) ;1 - find the pivot
+    (while (<= i j)
+      (while (< (svref vec i) p) (incf i)) ;2 - stops when we find the element that is > pivot or continues until i is the pivot
+      (while (> (svref vec j) p) (decf j))
+      (when (<= i j)
+	(rotatef (svref vec i) (svref vec j))
+	(incf i)
+	(decf j))
+      (if (> (- j l) 1) (quicksort vec l j));3 - if each partition has more than 1 element then break it down further
+      (if (> (- r i) 1) (quicksort vec i r))); - if right - index > 1 means we have more than one element - so we can further break down this partition as well
+    vec))
+
+;;test it out
+(setf *v1* (vector 10 8 7 -17 19 2 10 15))
+(quicksort *v1* 0 (1- (length *v1*))) ;;also note it's not destructive
+
+(defun quicksort1 (vec l r)
+  (let ((a l)
+	(b r)
+	(p (svref vec (round (1+ r) 2))))
+    (while (<= a b)
+      (while (< (svref vec a) p) (incf a))
+      (while (> (svref vec b) p) (decf b))
+      (when (<= a b)
+	(rotatef (svref vec a) (svref vec b))
+	(incf a)   ;otherwise the next bit messes up
+	(decf b))  ;otherwise the next part messes up
+      (if (> (- b l) 1) (quicksort1 vec l b)) 
+      (if (> (- r a) 1) (quicksort1 vec a r)))
+    vec))
