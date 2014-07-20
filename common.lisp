@@ -5132,6 +5132,22 @@ my-buf
 	(if (> (- r a) 1) (quicksort2 vec a r)))
     vec))
 
+(defun quicksort-memory1 (vec l r)
+  (let ((a l)
+	(z r)
+	(p (svref vec (round r 2))))
+    (while (<= a z)
+      (while (> p (svref vec a)) (incf a))
+      (while (< p (svref vec z)) (decf z))
+      (when (<= a z)
+	(rotatef (svref vec a) (svref vec z))
+	(incf a)
+	(decf z)
+	(if (> (- r a) 1) (quicksort-memory1 vec a r))
+	(if (> (- z l) 1) (quicksort-memory1 vec l z))))
+    vec))
+
+
 ;;see if it works again
 (quicksort2 *v1* 0 (1- (length *v1*)))
    
@@ -5154,10 +5170,70 @@ my-buf
 ;;here's a better example of it not working
 (let ((x 100))
   (ntimes 7
+    (print x)
     (setf x (+ x 1))
     (princ x))
-  x) ;  100 is returned! instead of 107 
+  x) ;  100 is returned! instead of 107; it increments the wrong x - increments
+;the x in the ntimes macro instead of the x in the let, the one we wanted
+;;see this is an example of inadvertent variable capture
 
 (let ((x 100))
   (pprint (macroexpand-1 '(ntimes 7
 		   (setf x (+ x 1))))))
+
+;;10.6 generalized reference
+(defmacro cah (lst)
+  `(car ,lst))
+;;macros get expanded right into the code - any macro whose expansion can be the first arg to setf can itself be the first arg to setf
+
+(let ((x (list 'a 'b 'c)))
+  (setf (cah x) 44)
+  x)
+
+(let ((x (list 'a 'b 'c)))
+  (pprint (macroexpand-1 '(setf (cah x) 44))))
+
+(defmacro my-incf (x &optional (y 1))
+  `(setf ,x (+ ,x ,y)))
+
+(setf lst nil)
+(setf (car (push 1 lst)) (1+ (car (push 1 lst))))
+lst ;(1 2)
+(setf lst nil)
+(my-incf (car (push 1 lst)))
+lst ;(1 2)
+(setf lst nil)
+(incf (car (push 1 lst)))
+lst ;(2) ;;notice how the above doesn't match this one
+;;using define-modify-macro would works - takes 3 args
+;;name of macro - additional params - name of function that yields the new value of the place
+(define-modify-macro our-incf (&optional (y 1)) +)
+(define-modify-macro append1f (val)
+  (lambda (lst val) (append lst (list val))))
+
+(let ((lst '(a b c)))
+  (append1f lst 'd)
+  lst)
+
+;;;10.7 Example: Macro Utilities
+
+(defmacro for (var start stop &body body)
+  (let ((gstop (gensym)))
+    `(do ((,var ,start (1+ ,var))
+	  (,gstop ,stop)) ;done to avoid multiple calls since ,stop can be a call to something that evaluates to a number
+	 ((> ,var ,gstop))
+       ,@body)))
+
+(defmacro in (obj &rest choices)
+  (let ((insym (gensym)))
+    `(let ((,insym ,obj))
+       (or ,@(mapcar #'(lambda (c) `(eql ,insym ,c))
+		     choices)))))
+
+
+
+;;Uses
+(for x 1 8
+  (princ x))
+
+(macroexpand-1 '(in '- '* '+ '- '/))
