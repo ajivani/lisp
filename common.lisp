@@ -5047,6 +5047,15 @@ my-buf
 `(lst is ,lst)
 `(comma-at lst is ,@lst)
 
+;;select open paran and press (ctrl + c + return) (control + c + enter) to expand macro quickly
+`(a (+ 1 2) 3)
+`(a ,(+ 1 2) 3); (A 3 3)
+`(a (list a b) 3); (A (list A B) 3)
+`(a ,(list 1 2) 3)
+`(a ,(list (+ 1 1 8 9) 2) 3); (A (19 2) 3)
+`(a ,@(list (+ 1 7 3 2) 2) 3); (A 13 2 3)
+`(a ,(list 'a 'b) 3); (A (A B) 3)
+`(a ,(list a b) 3); FAILS because (list a b) would fail since neither a or b are functions
 
 ;;this is like while (test) (body1) (body2) (body3) -- basically we make a list
 ;;of lists that 
@@ -5236,4 +5245,65 @@ lst ;(2) ;;notice how the above doesn't match this one
 (for x 1 8
   (princ x))
 
-(macroexpand-1 '(in '- '* '+ '- '/))
+(macroexpand-1 '(in '- '* '+ '- '/)); see how it draws it out
+
+;;mapcar messing and seeing what macar does
+(mapcar #'(lambda (x) (+ x 100))
+	'(1 2 3 4 5));(101 102 103 104 105)
+
+;now look what happens when we put it into code, it's almost like
+;we can make the code if we could figure out a way to change the variables
+(mapcar #'(lambda (x) `(+ x 100))
+	'(1 2 3 4 5)); ((+ X 100) (+ X 100) (+ X 100) (+ X 100) (+ X 100))
+
+;;more examples of in to see what actually happens
+;;base case for roughly what happens - we know it creates in code a massive or statement 
+(defmacro in-1 (obj &rest choices)
+  `(or ,@(mapcar #'(lambda (x) `(eql ,obj ,x))
+		  choices)))
+(macroexpand-1 '(in-1 '- '+ '- '*))
+;(OR (EQL '- '+) (EQL '- '-) (EQL '- '*))
+
+;;comma missing in the `(eql ,obj ,x) - so this doesn't works
+;(defmacro in-1a (obj &rest choices)
+;  `(or ,@(mapcar #'(lambda (x) '(eql ,obj ,x))
+;		 choices)))
+
+(defmacro in-2 (obj &rest choices)
+  `(or (mapcar #'(lambda (x) `(eql ,x ,obj))
+	       ,@choices)))
+(macroexpand-1 '(in-2 '- '+ '- '*)) ;;says + is not of type list
+;(OR (MAPCAR #'(LAMBDA (X) `(EQL ,X ,OBJ)) '+ '- '*))
+
+;;play with this a bit before noting important plays
+(defmacro in-3 (obj &rest choices)
+  (let ((insym (gensym)))
+    `(let ((,insym ,obj))
+       (or ,(mapcar #'(lambda (x) `(eql ,insym ,x))
+		    choices)))))
+;extra set of paranthesis but otherwise fine
+(pprint (macroexpand-1 '(in-3 '- '+ '* '-)))
+;(LET ((#:G962 '-))
+;  (OR ((EQL #:G962 '+) (EQL #:G962 '*) (EQL #:G962 '-))))
+
+(defmacro in-4 (obj &rest choices)
+  (let ((insym (gensym)))
+    `(let ((,insym ,obj))
+       `(or ,(mapcar #'(lambda (c) `(eql ,c ,insym)); this one is needed since we want to create this code
+		    ,choices)))))
+(pprint (macroexpand-1 '(in-4 '- '+ '* '-)))
+;(LET ((#:G1011 '-))
+;  `(OR ,(MAPCAR #'(LAMBDA (C) `(EQL ,C ,INSYM)) ('+ '* '-))))
+
+;;just move the comma around and adjust 
+(defmacro in-5 (obj &rest choices)
+  (let ((insym (gensym)))
+    `(let ((,insym ,obj))
+       ,(or (mapcar #'(lambda (x) `(eql ,x ,insym))
+		   choices)))))
+(pprint (macroexpand-1 '(in-5 '- '* '+ '-)))
+;(LET ((#:G1020 '-))
+;  ((EQL '* #:G1020) (EQL '+ #:G1020) (EQL '- #:G1020)))
+
+
+
