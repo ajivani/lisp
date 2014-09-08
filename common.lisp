@@ -5266,7 +5266,7 @@ lst ;(2) ;;notice how the above doesn't match this one
 		     choices)))))
 
 ;see it expands it out - it's also just a  
-(my-in '- '* '+ '- '/)xs
+(my-in '- '* '+ '- '/)
 ;;as an experiment i changed the ,x to x and you can see that the equality
 ;;is a constant in the second scenariox
 
