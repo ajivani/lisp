@@ -3049,8 +3049,8 @@
  (destructuring-bind ((&key w x) &rest y) '((:w 3 :x 10) a b c d e f)
    (list w x y)) ;;(3 10 (A B C))
 
- ;;6.4 UTILITIES - COPY these over for every project at least
-
+;;;6.4 UTILITIES - COPY these over for every project at least
+;;utility functions - util - util functions
  ;;T if the list has one element
  (defun single? (lst)
    (and (consp lst) (null (cdr lst))))
@@ -3987,7 +3987,8 @@
  ;;;*standard-input* - to read from the stream
  ;;;*standard-output* - default place for output` 
  ;;;7.1 - streams
-(setf path (make-pathname :name "/Users/aliya/lisp/lisp/myfile.txt")) ; pathname
+;(setf path (make-pathname :name "/Users/aliya/lisp/lisp/myfile.txt")) ; pathname
+(setf path (make-pathname :name "myfile100"))
 (setf str (open path :direction :output
 		:if-exists :supersede)) ; stream gets overwritten
 (format str "Something~%") ; if we give this stream to format it will print it to that file
@@ -4015,6 +4016,7 @@
       (format t "~A~%" line)))) ; the with-open-file 
 ;;test it out
 (pseudo-cat "/Users/aliya/lisp/lisp/myfile.txt")
+(pseudo-cat "/Users/aliya/lisp/lisp/myfile100")
 
 					;(defun ask-read ()
 					;  (read))
@@ -5044,18 +5046,27 @@ my-buf
 `(*testlst* is ,*testlst*); (*TESTLST* IS (A B C))
 ;;comma-at ,@ with a backquote will show the 
 `(*testlst* is ,@*testlst*) ;(*TESTLST* IS A B C)
-`(lst is ,lst)
+`(lst is ,lst) ;(LST IS (2))
 `(comma-at lst is ,@lst)
 
 ;;select open paran and press (ctrl + c + return) (control + c + enter) to expand macro quickly
-`(a (+ 1 2) 3)
+`(a (+ 1 2) 3) ; (A (+ 1 2) 3)
 `(a ,(+ 1 2) 3); (A 3 3)
 `(a (list a b) 3); (A (list A B) 3)
-`(a ,(list 1 2) 3)
+`(a ,(list 1 2) 3); (A (1 2) 3)
 `(a ,(list (+ 1 1 8 9) 2) 3); (A (19 2) 3)
+`(a ,@(list (+ 1 1 8 9) 2) 3); (A 19 2 3)
 `(a ,@(list (+ 1 7 3 2) 2) 3); (A 13 2 3)
 `(a ,(list 'a 'b) 3); (A (A B) 3)
-`(a ,(list a b) 3); FAILS because (list a b) would fail since neither a or b are functions
+
+;;see it fails since it's trying to evaluate 
+;`(a ,(list a b) 3); FAILS because (list a b) would fail since neither a or b are functions
+;looks like it evalutates everythin in the list
+`(a ,(list 'a (list 1 2) 'b) d); (A (A (1 2) B) d)
+`(a ,(list 'a (+ 1 2) 'b) d); (A (A 3 B) D)
+`(a ,@(list 'a (+ 1 2) 'b) d); (A A 3 B D) ; see how everything gets selected
+
+
 
 ;;this is like while (test) (body1) (body2) (body3) -- basically we make a list
 ;;of lists that 
@@ -5225,6 +5236,7 @@ lst ;(2) ;;notice how the above doesn't match this one
   lst)
 
 ;;;10.7 Example: Macro Utilities
+;; C-c RET will return the macro
 
 (defmacro for (var start stop &body body)
   (let ((gstop (gensym)))
@@ -5239,12 +5251,26 @@ lst ;(2) ;;notice how the above doesn't match this one
        (or ,@(mapcar #'(lambda (c) `(eql ,insym ,c))
 		     choices)))))
 
-
-
 ;;Uses
 (for x 1 8
   (princ x))
 
+(in '- '* '+ '- '/)
+
+;;see how this function version creates the code that we need
+;;a macro would expand the code to something similar and then run it
+(defun my-in (obj &rest choices)
+  (let ((insym (gensym))) ;a guaranteed unique symbol
+    `(let ((,insym ,obj))
+       (or ,@(mapcar #'(lambda (x) `(eql ,insym ,x))
+		     choices)))))
+
+;see it expands it out - it's also just a  
+(my-in '- '* '+ '- '/)xs
+;;as an experiment i changed the ,x to x and you can see that the equality
+;;is a constant in the second scenariox
+
+;C-c RET macro expansion
 (macroexpand-1 '(in '- '* '+ '- '/)); see how it draws it out
 
 ;;mapcar messing and seeing what macar does
@@ -5305,5 +5331,5 @@ lst ;(2) ;;notice how the above doesn't match this one
 ;(LET ((#:G1020 '-))
 ;  ((EQL '* #:G1020) (EQL '+ #:G1020) (EQL '- #:G1020)))
 
-
+(in-3 '- '& '+ '= '-)
 
