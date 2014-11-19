@@ -1,4 +1,4 @@
- ;Ansi common lisp  
+;;Ansi common lisp  
  ;;'y 'x '(and (integerp x) (zerop (mod x 2))))
  ;(trace function-name)
  ;all lisp expressions are atoms or 
@@ -5251,6 +5251,11 @@ lst ;(2) ;;notice how the above doesn't match this one
        (or ,@(mapcar #'(lambda (c) `(eql ,insym ,c))
 		     choices)))))
 
+;(defmacro random-choice (&rest exprs)
+;  `(case (random ,(length exprs))
+;     ,@(let ((key 
+
+
 ;;Uses
 (for x 1 8
   (princ x))
@@ -5265,10 +5270,21 @@ lst ;(2) ;;notice how the above doesn't match this one
        (or ,@(mapcar #'(lambda (x) `(eql ,insym ,x))
 		     choices)))))
 
-;see it expands it out - it's also just a  
+;See It expands it out - it's also just a  
 (my-in '- '* '+ '- '/)
 ;;as an experiment i changed the ,x to x and you can see that the equality
-;;is a constant in the second scenariox
+;;is a constant in the second scenario, a constant that 
+
+
+;in this case the or function actually gets called and works like the identity function!
+;see how when it's created the identity function gets called
+(defun my-in2 (obj &rest choices)
+  (let ((insym (gensym)))
+    `(let ((,insym ,obj))
+       ,(identity (mapcar #'(lambda (x) `(eql ,x ,insym))
+			  choices)))))
+
+(my-in2 '- '+ '* '- '^)
 
 ;C-c RET macro expansion
 (macroexpand-1 '(in '- '* '+ '- '/)); see how it draws it out
@@ -5333,3 +5349,78 @@ lst ;(2) ;;notice how the above doesn't match this one
 
 (in-3 '- '& '+ '= '-)
 
+
+;;from onlips - macro chapter
+;;want something called nil! like from earlier
+(defmacro nil! (var)
+  (list 'setq var nil)) ;note nil evaluates to nilcc
+
+;;the macro expansion is
+(macroexpand-1 `(nil! x))
+;(setq x nil) is what it expands to during macroexpansion
+;say the expansion led to another macro, then that macro would eventually be
+;expanded again until the last ting is not a function
+;like russian doll with another doll inside of it
+;parser reads source code and setds output to the compiler, but the 
+;output of the parser consists of lists of lisp objects, with macros
+;you manipulate the program while it's in this intermediate form between
+;parser and compiler. it changes what hte compiler can see! 
+
+;;backquote is special since it lets it look close to the actual expansion
+(equalp `(a b c) '(a b c)); T
+(equalp `(a b c) (list 'a 'b 'c)); T
+(setq a 1 b 2 c 3 d 4)
+;;backquote tells us to turn off the quoting
+`(a ,b c ,d); (A 2 C 4)
+(list 'a b 'c d); (A 2 C 4)
+
+(nil! **x**); sets **x** to nil
+
+;comma can be deep in parans
+`(a (,b c)); (A (2 C))
+(list 'a (list b 'c)); (A (2 C))
+
+;can work with and within the quotes as well
+`(a b ,c (' ,(+ a b c)) (+ a b) 'c '((,a ,b))); (A B 3 ('6) (+ A B) C '(( 1 2)))
+`( a b '( ,(- a c)) (' ,(+ 100 c)) '(- a c) '(- ,a ,c) (- ,a ,c)); (A B '(-2) ('103) '(- A C) '(- 1 3) (- 1 3))
+
+
+`(,a ,(+ b c)); (1 5)
+(setf plus '+)
+`(,a ,(funcall plus b c)); (1 5)
+(list a (funcall plus b c)); (1 5)
+
+(defmacro nil! (var)
+  `(setq ,var nil))
+(macroexpand-1 '(nil! a))
+
+(nil! a); slime macroexpand-1 shortcut C-c C-m ---- or C-c M-m
+
+;;make the use of it first
+;(mapcar #'(lambda (x)
+;	    (nif x 'p 'z 'n))
+;	'(0 2.5 -8))
+;;with backquote
+(defmacro nif (expr pos zero neg)
+  `(case (truncate (signum ,expr))
+     (1 ,pos)
+     (0, zero)
+     (-1, neg)))
+
+;now use it again
+(nif -1 'a 'b 'c)
+
+(mapcar #'(lambda (x)
+	    (nif x 'positive 'z 'negative))
+	'(0 2.5 -8 -0)); cool huh
+
+;;without backquote - same thing but more confusing to see what it expands to
+(defmacro nif (expr pos zero neg)
+  (list 'case
+	(list 'truncate (list 'signum expr))
+	(list 1 pos)
+	(list 0 zero)
+	(list -1 neg)))
+
+;; ,@ instead of inserting just the value of the expression, it splices it
+;; define splice - means inserting while removing the outermost level of parantheses
