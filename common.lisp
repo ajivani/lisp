@@ -5424,3 +5424,165 @@ lst ;(2) ;;notice how the above doesn't match this one
 
 ;; ,@ instead of inserting just the value of the expression, it splices it
 ;; define splice - means inserting while removing the outermost level of parantheses
+
+(setq b '(1 2 3))
+`(a ,b c); (A (1 2 3) C)
+`(a ,@b c); (A 1 2 3 C)
+;; ,@ must be within a sequence - error - `,@b since there is nowhere to splice the value of b to
+;; object being spliced must be a list unless it occurs last
+;`(a ,@1) 
+`(a ,@'1); (A . 1) but the `(a ,@'1 b) will cause an error
+
+(when (> 2 1)
+  (print `(do this))
+  (print `(do that))
+  1)
+
+(defmacro our-when (test &body body)
+  `(if ,test
+       (progn
+	 ,@body)))
+
+(our-when2 (> 2 1)
+  (print 'a)
+  (print 'b)
+  1)
+
+(defmacro our-when2 (test &body body)
+  `(cond (,test
+	  ,@body)))
+
+(our-when2 (> 2 1)
+  (print 'a)
+  (print 'b)
+  1)
+
+;;comma-at is splices a list like so where b = '(1 2 3)
+`(a ,@b c); (A 1 2 3 C)
+(cons 'a (append b (list 'c))); (A 1 2 3 C)
+;;comma-@ ,@ exists only to make it easier to read then the second thing
+
+;;remember member - we have to explicitly define the test for eq
+(member 'a b :test #'eq)
+
+;;how to write a simple macro
+; call: (memq x choices)
+;expansion: (member x choices :test #'eq) 
+
+(defmacro memq (obj lst)
+  `(member ,obj ,lst :test #'eq))
+
+(memq '2 b)
+
+;;with while
+;(while hungry
+;  (stare intently)
+;  (meow)
+;  (rub-against-leg))
+
+(defmacro mac (expr)
+  `(pprint (macroexpand-1 ',expr)))
+
+(mac (while (able) (laugh)))
+;;trick to setting a variable with the list returned by macroexpand-1 
+(setq *expr1* (macroexpand-1 '(memq 'a '(a b c))))
+;(setq *expr2* (mac '(memq 'a '(a b c)))) ; doesn't work since pprint doesn't return what we'd e
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;now back to ansii commmon lisp with a bacground in what ` does and what  , does in a macro `(some-symbol ,@(the-value-returned-by-this-expression-spliced))
+
+(defmacro my-in (obj &rest choices)
+  (let ((insym (gensym)))
+    `(let ((,insym ,obj)) ;remember the ` means just create code
+       (or ,@(mapcar #'(lambda (c) `(eql ,insym ,c))
+		     choices)))))
+
+;;Queston and Answer for the above macro
+;q: but why do we need the , in the second `(eql ,insym ,c) when we already have a backwards quote `(let....) near the start of the definition?
+;a: we need a , per ` so the second one has a `(eql .....) and we need the value of ,insym and the value of ,c not just the symbol 'C)
+
+;q: well why don't we need a ,choices? like why can we just leave it to have choices (without comma)
+;a: the word choices is withing a set of backquote `(let....) and a comma ,@(mapcar....choices)
+
+;q: why do we have a ,@ before the mapcar the ,@(mapcar ...)
+;a: remember our goal above is to have an expression like below
+(or (eql '+ '-)
+    (eql '+ '*)
+    (eql '+ '+)
+    (eql '+ '+))
+;if we just left the mapcar we'd have the above expression but surrounded by one more pair of parantheses
+((or (eql '+ '-)
+    (eql '+ '*)
+    (eql '+ '+)
+    (eql '+ '+)))
+
+(defmacro random-choice (&rest exprs)
+  `(case (random ,(length exprs))
+     ,@(let ((key -1))
+	 (mapcar #'(lambda (expr) `(,(incf key) ,expr))
+		 exprs))))
+
+(random-choice 'a 'b 88 19)
+;;expands to:
+(case (random 4)
+  (0 'a)
+  (1 'b)
+  (2 88)
+  (3 19))
+
+;;use
+;(with-gensym (x y z) 
+; (rest-of-code) )
+;;equivalent to:
+(let ((x (gensym))
+      (y (gensym))
+      (z (gensym)))
+  (format t "rest of body using generated symbold ~a ~a ~a" x y z))
+
+(defmacro with-gensyms (syms &body body)
+  `(let ,(mapcar #'(lambda (sym)
+		     `(,sym (gensym)))
+		 syms)
+     ,@body))
+
+;;lets do in with let 
+(defmacro in-test1 (obj &rest choices)
+  (with-gensyms (insym) ;using the with symbol here
+    `(let ((,insym ,obj))
+       (or ,@(mapcar #'(lambda (c) `(eql ,c ,insym))
+		     choices)))))
+
+(in-test1 '+ '- '& '^); look the let created by the with-gensyms
+;(LET ((#:G1002 '+))
+;  (LET ((#:G1004 (EQL '- #:G1002)))
+
+
+
+(defmacro avg (&rest args)
+ `(/ (+ ,@args) ,(length args)))
+
+(avg 8 9 10); (/ (+ 8 9 10) 3) see how the 3 is already ready during compile time
+
+;normally we'd just make apply an apply function
+(defun avg-func (&rest args)
+  (/ (apply #'+ args) (length args)))
+
+(avg-func 8 9 10); (when using the function the (length args) is calculated at runtime)
+
+;;intentional variable capture
+
+;;ie instead of this:
+;(let ((val (calculate-something)))
+;  (if val
+;      (1+ val)
+;      0))
+
+;;we can use this
+;(aif (calculate-something)
+;  (1+ it)
+;  0)
+
+
+(defmacro aif (test then &optional else)
+  `(let ((it ,test))
+     (if it ,then ,else)))
