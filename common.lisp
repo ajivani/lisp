@@ -5201,6 +5201,32 @@ my-buf
   (pprint (macroexpand-1 '(ntimes 7
 		   (setf x (+ x 1))))))
 
+;;using gensyms
+(defmacro ntimes (n &rest body)
+  (let ((g (gensym)))
+    `(do ((,g 0 (+ ,g 1)))
+	 ((>= ,g ,n)); see how this comma n messes things up ,n == (setf v (- v 1))
+       ,@body)))
+
+;;notice there are only 2 (half as many)
+;;multiple evaluation is what it falls for
+(let ((v 5))
+  (ntimes (setf v (- v 1))
+    (princ ".")))
+
+(defmacro  ntimes (n &rest body)
+  (let ((g (gensym))
+	(h (gensym))) ;create 2 gensyms to avoid variable capture
+    `(let ((,h ,n))
+       (do ((,g 0 (+ ,g 1)))
+	   (>= ,g ,h)
+	 ,@body))))
+
+(pprint (macroexpand-1 '(cond (a b)
+			      (c d e)
+			      (t f))))
+
+
 ;;10.6 generalized reference
 (defmacro cah (lst)
   `(car ,lst))
@@ -5574,7 +5600,7 @@ lst ;(2) ;;notice how the above doesn't match this one
 ;;ie instead of this:
 ;(let ((val (calculate-something)))
 ;  (if val
-;      (1+ val)
+;      (1+ val) ;;ie do something with the value returned from the test condition
 ;      0))
 
 ;;we can use this
@@ -5582,7 +5608,129 @@ lst ;(2) ;;notice how the above doesn't match this one
 ;  (1+ it)
 ;  0)
 
-
+;;use variable caputure to see if a conditional returns something
+;;if it returns someting we use that value and 
 (defmacro aif (test then &optional else)
   `(let ((it ,test))
      (if it ,then ,else)))
+
+;;;;Chapter 10 excercises chap 10 exercises
+;;exercises 10-1
+(let ((x 'a)
+      (y 'b)
+      (z '(c d)))
+  (progn
+    (print `(,z ,x z))
+    (print `(x ,y ,@z))
+    `((,@z ,x) z))) 
+;;10-2
+(defmacro my-if (test then else)
+  `(cond ((,@test)
+	  ,then)
+	 (t
+	  ,else)))
+;;both would work the above has too many
+(defmacro cif (test then else)
+  `(cond
+     (,test ,then)
+     (t ,else)))
+
+	
+(my-if (> 1 1) (print "true") (print false))
+	
+;;exercise 10-3 
+(let ((n 2))
+  (nth-expr n (/ 1 0) (+ 1 2) (/ 1 1)))
+
+(defmacro nth-expr0 (n &rest exprs)
+  `(case ,n 
+     ,@(with-gensyms (i)
+         (let* ((i 0))
+           (mapcar #'(lambda (expr) `(,(incf i) ,expr))
+		   exprs)))))
+
+(defmacro nth-expr1 (n &rest exprs)
+    `(case ,n 
+       ,@(with-gensyms (i)
+	   (progn
+	     (setf i 0)  
+	     (mapcar #'(lambda (expr) `(,(incf i) ,expr))
+		     exprs)))))
+
+(defmacro nth-expr(n &rest exprs)
+  `(case ,n
+     ,@(let ((c 0))
+	 (mapcar #'(lambda (expr) `(,(incf c) ,expr))
+		 exprs))))
+
+;doesn't work
+(defmacro nth-expr2 (n &rest exprs)
+  (with-gensyms (x)
+    `(let ((,x 0))
+       (case ,n
+	 ,@(mapcar #'(lambda (expr) `(,(incf x) ,expr))
+		   exprs)))))
+;also doesn't work - we get a x isn't a number thing
+(defmacro nth-expr3 (n &rest exprs)
+  (let ((x (gensym)))
+    `(let ((,x 0))
+       (case ,n
+	 ,@(mapcar #'(lambda (expr) `(,(incf x) ,expr))
+		   exprs)))))
+;;also doesn't work       
+(defmacro nth-expr4 (n &rest exprs)
+  (let ((x (gensym)))
+    `(case ,n
+       (let ((,x 0))
+	 ,@(mapcar #'(lambda (expr) `(,(incf x) ,expr))
+		   exprs)))))      
+;;also doesn't work but can see why now
+(defmacro nth-expr5 (n &rest exprs)
+  (let ((i (gensym)))
+    `(let ((,i 0))
+       (case ,n
+	 ,@(mapcar #'(lambda (expr) `((incf ,i) ,expr))
+		   exprs)))))
+;still weird
+(defmacro nth-expr6 (n &rest exprs)
+  (let* ((i (gensym))
+	 (i 0))
+    `(case ,n
+       ,@(mapcar #'(lambda (expr) `(,(incf i) ,expr))
+		 exprs))))
+
+
+;(setf c "test"); and replace below 'c with c and it will still work
+(nth-expr6 2 '(a b c) 2 'c 'asdf #'+ (+ 2 2 1 (/ 2 9)))
+
+;;make a recursive version of ntimes
+;;does not work wtih the labels one because i used labels wrong
+(defmacro ntimes-r2 (n &rest body)
+  (with-gensyms(gn grec)
+    `(let ((,gn ,n))
+       (labels (,grec (c)
+	          (when (<= c ,gn)
+		    ,@body
+		    (,grec (+ 1 c))))
+	 (,grec 0)))))
+		     
+(let ((v 5))
+  (ntimes-r2 v (princ ".")))
+
+(defmacro ntimes-rec (n &rest body)
+  (with-gensyms (gn grec)
+    `(let ((,gn ,n))
+       (labels ((,grec (i)
+		  (when (< i ,gn)
+		    ,@body
+		    (,grec (1+ i)))))
+	 (,grec 0)))))
+
+(defmacro ntimes-r2 (n &body body)
+  (with-gensyms (gn grec)
+    `(let ((,gn ,n))
+       (labels ((,grec (i)
+        (when (< i ,gn)
+          ,@body
+          (,grec (1+ i)))))
+    (,grec 0)))))
