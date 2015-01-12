@@ -5734,3 +5734,42 @@ lst ;(2) ;;notice how the above doesn't match this one
           ,@body
           (,grec (1+ i)))))
     (,grec 0)))))
+
+;;exercise 10-5
+
+
+(defmacro n-of (n expr)
+  (with-gensyms (gn grec)
+    `(let ((,gn ,n))
+       (labels ((,grec (start stop)
+		  (if (>= start stop)
+		      nil
+		      (cons ,expr (,grec (1+ start) stop)))))
+	 (,grec 0 ,gn)))))
+
+;;alternate way to do it using the accumulator and then just returning that
+(defmacro n-of-alternate1 (n expr)
+  (with-gensyms (gn grec gacc)
+    `(let ((,gn ,n))
+       (labels ((,grec (i j acc)
+		  (if (>= i j)
+		      (nreverse acc)
+		      (,grec (1+ i) j (cons ,expr acc)))))
+	 (,grec 0 ,gn nil)))))
+;;would generate a bunch of (cons (incf i) acc) where acc is (cons (incf i) (cons (incf i) (cons (incf i) nil)))
+;;another cool way to do it using do
+(defmacro n-of-alternate2 (n expr)
+  (with-gensyms (gn gi gacc)
+    `()))
+
+
+
+;;use
+(let ((n 4)
+      (i 0))
+  (n-of n (incf i)))
+
+;;want something like this as the expansion
+(let ((n 4)
+      (i 0))
+  (cons (incf i) (cons (incf i) (cons (incf i) (cons (incf i) nil)))))
