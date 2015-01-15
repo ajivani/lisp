@@ -5773,3 +5773,32 @@ lst ;(2) ;;notice how the above doesn't match this one
 (let ((n 4)
       (i 0))
   (cons (incf i) (cons (incf i) (cons (incf i) (cons (incf i) nil)))))
+
+
+
+;;Ex 10-6; exercise 10-6 - macro that takes a body of code and protects vars
+;;want to make a 
+;(let ((v1 v1)
+;      (v2 v2)
+;      (v3 v3))
+; ,@body        ;in this scenario the manipulaiton that occurs in 
+(defmacro protect-vars (vars &rest body)
+  `(let ,(mapcar #'(lambda (v) `(,v ,v))
+		 vars)
+     ,@body))
+
+(let ((a 10)
+      (b 20)
+      (c 30))
+  (progn 
+    (protect-vars (a c)
+      (progn
+	(setf a -1
+	      b -1
+	      c -1)
+	(print a)
+	(print b)
+	(print c)))
+    (print a)
+    (print b)
+    (print c)))
