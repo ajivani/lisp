@@ -5786,12 +5786,12 @@ lst ;(2) ;;notice how the above doesn't match this one
   `(let ,(mapcar #'(lambda (v) `(,v ,v))
 		 vars)
      ,@body))
-
+;;with the progn and lets see it without it
 (let ((a 10)
       (b 20)
       (c 30))
   (progn 
-    (protect-vars (a c)
+    (protect-vars2 (a c)
       (progn
 	(setf a -1
 	      b -1
@@ -5802,3 +5802,192 @@ lst ;(2) ;;notice how the above doesn't match this one
     (print a)
     (print b)
     (print c)))
+
+;;another way to do this which is really cool
+(defmacro protect-vars2 (params &rest body)
+  `((lambda ,params ,@body) ,@params))
+
+;;10-7 why is this a bad def of push
+(defmacro push-wrong (obj lst)
+  `(setf ,lst (cons ,obj ,lst)))
+;;see how this push will be ,lst and ,lst twice so suffers from 
+;;multiple evaluation problem
+
+;; check the real push
+(defun test-push ()
+  (let ((a (make-array 3))
+        (i 0))
+    (setf (aref a 0) (list 0)
+          (aref a 1) (list 1)
+          (aref a 2) (list 2))
+    (push 4 (aref a (incf i)))
+    (format t "~A ~A ~A~%" (aref a 0) (aref a 1) (aref a 2))))
+
+;; check the wrong push
+(defun test-push-wrong ()
+  (let ((a (make-array 3))
+        (i 0))
+    (setf (aref a 0) (list 0)
+          (aref a 1) (list 1)
+          (aref a 2) (list 2))
+    (push-wrong 4 (aref a (incf i)))
+    (format t "~A ~A ~A~%" (aref a 0) (aref a 1) (aref a 2))))
+
+(test-push)
+(test-push-wrong)
+
+;;;;CLOS 11
+
+;;with structures
+(defstruct rect-st
+  height width)
+
+(defstruct circle-st 
+  radius)
+
+(defun area-st (x)
+  (cond ((rect-st-p x)
+	 (* (rect-st-height x) (rect-st-width x)))
+	((circle-st-p x)
+	 (* pi (expt (circle-st-radius x) 2)))))
+;use
+(let ((r (make-rect-st))
+	       (c (make-circle-st)))
+	   (setf (rect-st-height r) 2
+		 (rect-st-width r) 3
+		 (circle-st-radius c) 10)
+	   (area-st r)
+	   (area-st c))
+
+;;doing it with classes
+(defclass rectangle () ;this space is for the superclass
+  (height width))
+
+(defclass circle ()
+  (radius))
+
+(defmethod area ((x rectangle)) ;the first arg is a x of type rectangle? yes it looks at the type of arg and invokes the corresponding method
+  (* (slot-value x 'height) (slot-value x 'width)))
+
+(defmethod area ((x circle))
+  (* pi (expt (slot-value x 'radius) 2)))
+
+(let ((r (make-instance 'rectangle))
+      (c (make-instance 'circle)))
+  (setf (slot-value r 'height) 2
+	(slot-value r 'width) 3
+	(slot-value c 'radius) 10)
+  (print (area r))
+  (print (area c)))
+
+;;adding a colored and colered-circle
+
+(defclass colored ()
+  (color)) ;has a color
+
+(defclass colored-circle (circle colored) ;inherits for circle and colored
+  ())
+
+;;lets make an instance of colored-circle and see what happens
+(let ((c (make-instance 'circle))
+      (myred (make-instance 'colored))
+      (cc (make-instance 'colored-circle)))
+  (setf (slot-value cc 'color) 'red
+	(slot-value cc 'radius) 2)
+  (print (area cc))
+  (print (slot-value cc 'color)))
+
+;;;11.2 classes and instances
+
+(defclass circle ()
+  (radius center))
+
+;;try it here
+(setf c (make-instance 'circle)) ;#<CIRCLE {1006150143}>
+;and to set it's values
+(setf (slot-value c 'radius) 1);
+
+;;the third arg is a list of slot definitions
+;;slot-def is a list of a name followed by properties
+;;properties are the :accessor (look like keyword arguments)
+(defclass circle () 
+  ((radius :accessor circle-radius) ;could have used a :writer or :reader
+   (center :accessor circle-center))) ;instead of just accessor which is both of the above
+
+(setf c (make-instance 'circle)); so this makes the instance of it
+
+;;setter
+(setf (circle-radius c) 1)
+;;getter
+(circle-radius c)
+
+;;specifying a :writer or :reader in
+(defclass circle ()
+  ((radius :accessor circle-radius
+	   :initarg :radius             ;to give a default val for a slot
+	   :initform 1)
+   (center :accessor circle-center
+	   :initarg :center             ;init name
+	   :initform (cons 0 0))))      ;init value
+
+(setf c (make-instance 'circle :radius 3))
+(circle-radius c); 3
+(circle-center c); (0 . 0) ;since we didn't specify anyting note how it's still got a value
+
+;note how :initargs takes precedence over :initforms
+;;tabloid simulator
+;;make all the instances share a slot by using :allocation :class
+(defclass tabloid ()
+  ((top-story :accessor tabloid-story
+	      :allocation :class)));one per class
+;make a couple of tabloids
+(setf daily-blab       (make-instance 'tabloid)
+      unsolicited-mail (make-instance 'tabloid))
+;make a couple of stories
+(setf (tabloid-story daily-blab) 'adultery-of-senator)
+(tabloid-story unsolicited-mail) ; also the same
+
+;;11.4 superclasses
+(defclass graphic ()
+  ((color   :accessor graphic-color   :initarg :color)
+   (visible :accessor graphic-visible :initarg :visible
+	    :initform t)))
+
+;;inherits from circle and from graphics
+(defclass screen-circle (circle graphic)
+  ())
+
+;;will have 4 slots
+(graphic-color (make-instance 'screen-circle
+			      :color 'red :radius 3)) 
+			      
+(setf gc (make-instance 'screen-circle
+			:color 'red :radius 3))
+;;try out the circle-radius of gc as well as the circle-center
+
+;;make a screen circle have a default color
+(defclass screen-circle (circle graphic)
+  ((color :initform 'purple))) ;didn't need to put graphic-color there - if i put graphic color it messes up, so what if two slots have the same name? how does it distinguis it? lets try!
+
+;;when we do the above
+(graphic-color (make-instance 'screen-circle)) ; purple is the color we get
+(setf sc (make-instance 'screen-circle))
+(graphic-visible sc); T just like we assumed
+
+;;As a test see what would happen if you made another slot called color
+;;and then only initialized one part of it?
+(defclass fake-graphic ()
+  ((color :accessor fake-graphic-color :initarg :color)))
+(defclass fake-screen-circle (fake-graphic circle graphic)
+  ((color :initform 'red)))
+
+;;see how both of the slots got the same property
+(fake-graphic-color (make-instance 'fake-screen-circle)); red!
+(graphic-color (make-instance 'fake-screen-circle)); ALSO red!
+
+;;say i want to specify which one of the colors i want to have
+(defclass fake-graphic2 ()
+  ((color :accessor fake-graphic-color2 :initarg :color)))
+(defclass fake-screen-circle2 (fake-graphic2 circle graphic)
+  ((fake-graphic-color2 :initform 'blue)))
+;this just causes an error;(fake-graphic-color2 (make-instance 'fake-screen-circle2))
