@@ -5991,3 +5991,86 @@ lst ;(2) ;;notice how the above doesn't match this one
 (defclass fake-screen-circle2 (fake-graphic2 circle graphic)
   ((fake-graphic-color2 :initform 'blue)))
 ;this just causes an error;(fake-graphic-color2 (make-instance 'fake-screen-circle2))
+
+;;;11.5 precedence
+;;with multiple superclasses here is how we find the direction - order matters
+
+;;the basclass is t -> standard-object (that class is the one where the second arg to defclass is () i.e where it looks like it's inheriting from nothing)
+;;left to right as they appear in the calls
+(defclass sculpture () (height width depth))
+
+(defclass statue (sculpture) (subject))
+
+(defclass metalwork () (metal-type))
+
+(defclass casting (metalwork) ())
+
+(defclass cast-statue (statue casting) ())
+
+
+;;precedence rules
+;;1 start at the bottom
+
+;;2 walk upwards taking the leftmost unexplored branch
+
+;;3 if you enter a node and see anohter path entering same node from right
+;;then instead of entering the node, retrace your steps until get to a node
+;;with an unexpored path leading upwards. go back to step 2
+
+;;4 when you get to t you're done the order you entered a node is the order
+;;each node is determined in 
+
+;;;think of it like a recursive function left then right 
+
+(defmethod combine (x y)
+  (list x y))
+
+(combine 'a 'b)
+
+(defclass stuff () 
+  ((name :accessor name :initarg :name)))
+
+(defclass ice-cream (stuff) ())
+
+(defclass topping (stuff) ())
+
+
+;;look at the signature needs 2 objs ice-cream and topping
+(defmethod combine ((ic ice-cream) (top topping))
+  (format nil "~A ice-cream with ~A topping."
+	  (name ic)
+	  (name top)))
+
+;;so with an ice-cream and a topping it picks the right thing
+(combine (make-instance 'ice-cream :name 'chocolate)
+	 (make-instance 'topping :name 'treacle))
+
+;;so with an ice-cream and anything else the below question will be called
+(defmethod combine ((ic ice-cream) x)
+  (format nil "~A ice-cream with ~A."
+	      (name ic)
+	      x))
+
+;;with one arg as ice-cream and one anyting helse the above gets called
+(combine (make-instance 'ice-cream :name 'calm)
+	 'reluctance); "CALM ice-cream with RELUCTANCE."
+
+;;methods can also have specialized on types
+(defmethod combine ((x number) (y number))
+  (+ x y))
+
+(combine 4 3)
+
+;;or methods can be specializedon individual objs as determined by eql:
+(defmethod combine ((x (eql 'powder))
+		    (y (eql 'spark)))
+  'boom)
+
+(combine 'powder 'spark) 'boom
+
+;;if we use another method with the qualifiers and specializations
+;;it overwrites the original one
+(defmethod combine ((x (eql 'powder)) (y (eql 'spark)))
+  'kaboom)
+
+(combine 'powder 'spark); see it's kaboom this time 
