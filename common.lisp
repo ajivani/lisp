@@ -6066,7 +6066,7 @@ lst ;(2) ;;notice how the above doesn't match this one
 		    (y (eql 'spark)))
   'boom)
 
-(combine 'powder 'spark) 'boom
+(combine 'powder 'spark); 'boom
 
 ;;if we use another method with the qualifiers and specializations
 ;;it overwrites the original one
