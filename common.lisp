@@ -6074,3 +6074,62 @@ lst ;(2) ;;notice how the above doesn't match this one
   'kaboom)
 
 (combine 'powder 'spark); see it's kaboom this time 
+
+;;11.7 Auxiliary methods
+;before - but first do this 
+;after - let you wrap up a method ps do this
+
+;putting quantifying keyword after the method name
+(defclass speaker () ())
+
+(defmethod speak ((s speaker) string)
+  (format t "~A" string))
+
+;then call speak with with instakce of speaker just prints the second arg
+(speak (make-instance 'speaker)
+       "I'm hungry")
+
+;;make sublcass intellectual, which wraps before- and after- methods
+;;around the speak method
+(defclass intellectual (speaker) ())
+
+(defmethod speak :before ((i intellectual) string)
+  (princ "Perhaps "))
+
+(defmethod speak :after ((i intellectual) string)
+  (princ " in some sense"))
+
+;;now create a subclass of speakers that always have the last
+;;and the first word (lol)
+(speak (make-instance 'intellectual)
+       "I'm hungry"); Perhaps I'm hungry in some sense
+
+;;note all the before- and after- methods get called
+;;the following shoould make the before show up before the intellectual?
+(defmethod speak :before ((s speaker) string)
+  (princ "I think "))
+
+;no they actually end up in the middle of the call, wrapped around like a sandwich
+(speak (make-instance 'intellectual)
+       "I'm hungry"); Perhaps I think I'm hungry in some cases
+
+;;can use call-next-method and next-method-p to see if we want to let the 
+;;around method return the last method
+(defclass courtier (speaker) ())
+
+(defmethod speak :around ((c courtier) string)
+  (format t "Does the King believe that ~A" string)
+  (if (eql (read) 'yes)
+      (if (next-method-p) 
+	  (call-next-method))
+      (format t "Indeed, it is a preposterous idea. ~%"))
+  'bow)
+
+;when the first arg to speak is an instance of the courtier class, the
+;;courtier's tongue is now guarded by the around method
+
+;try the follwoing when you say anything other than yes, it'll print "Indeed this is a preposterous idea"
+;but change it to yes and it calls the before for speak (because of the
+;call-next-method in there
+;(speak '(make-instance 'courtier) "kings will last")
+
