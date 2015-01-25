@@ -6133,3 +6133,49 @@ lst ;(2) ;;notice how the above doesn't match this one
 ;call-next-method in there
 ;(speak '(make-instance 'courtier) "kings will last")
 
+;;11.8 Method Combination
+
+;(defun price (&res args)
+;  (+ (apply <most-specific-primary-method> args)
+;     .
+;     .
+;     .
+;     (apply <least-specific-primary-method args)))
+
+;the :method-combination to defgeneric
+
+(defgeneric price (x)
+  (:method-combination +))
+
+(defclass jacket () ())
+
+(defclass trousers () ())
+
+(defclass suit (jacket trousers) ())
+
+(defmethod price + ((jk jacket)) 350)
+
+(defmethod price + ((tr trousers)) 200)
+
+(price (make-instance 'suit)); 550
+
+;;11.9 Encapsulation
+(defpackage "CTR"
+            (:use "COMMON-LISP")
+	    (:export "COUNTER" "INCREMENT" "CLEAR"))
+
+(in-package ctr)
+
+(defclass counter () ((state :initform 0)))
+
+(defmethod increment ((c counter))
+  (incf (slot-value c 'state)))
+
+(defmethod clear ((c counter))
+  (setf (slot-value c 'state) 0))
+
+(defmethod val ((c counter))
+  (let (( v (slot-value c 'state)))
+    v))
+
+(unintern 'state)
