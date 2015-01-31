@@ -6179,3 +6179,99 @@ lst ;(2) ;;notice how the above doesn't match this one
     v))
 
 (unintern 'state)
+
+
+;;;Chapter 11 exercises - exercise 11 - exer 11 - questions chapter 11 - chap 11 questions
+;;11-1
+;;make a def for rect and circle that doesn't use slot value
+;;make it have an area
+
+(defclass rectangle ()
+  ((height :accessor height
+	   :initarg :height
+	   :initform 1)
+   (width  :accessor width
+	   :initarg :width
+	   :initform 1)))
+
+(defclass circle ()
+  ((radius :accessor radius
+	   :initarg :radius 
+	   :initform 1)
+   (center :accessor center
+	   :initarg :center
+	   :initform (cons 0 0))))
+
+(defmethod area ((x circle))
+  (* pi (expt (radius x) 2)))
+
+(defmethod area ((x rectangle))
+  (* (width x) (height x)))
+
+(let ((r (make-instance 'rectangle :height 3 :width 10))
+      (c (make-instance 'circle :radius pi :center (cons 1 1))))
+  (progn
+    (format t "Area of circle ~A~%" (area c))
+    (format t "Area of rectangle ~A~%" (area r))
+    (setf (cdr (center c)) 3)
+    (setf (car (center c)) 12)
+    (format t "Center of circle is ~A" (center c))))
+
+;;11.2 rewrite sphere and point as classes and 
+
+(defclass point1 ()
+  ((x :accessor x
+      :initarg :x
+      :initform 0)
+   (y :accessor y
+      :initarg :y
+      :initform 0)
+   (z :accessor z
+      :initarg :z
+      :initform 0)))
+
+(defclass surface ()
+  ((color :accessor surface-color
+	  :initarg :color
+	  :initform 'blue)))
+
+(defclass sphere (surface)
+  ((radius :accessor sphere-radius
+	   :initarg :radius
+	   :initform 1)
+   (center :accessor sphere-center
+	   :initarg :center
+	   :initform (make-instance 'point1 :x 0 :y 0 :z 0))))
+
+(defun defsphere (x y z r c)
+  (let ((s (make-instance 'sphere 
+			  :radius r
+			  :center (make-instance 'point1 :x x :y y :z z)
+			  :color c)))
+    (push s *world*)
+    s))
+
+(defmethod intersect ( (s sphere) (pt point1) xr yr zr)
+  (let* ((c (sphere-center s))
+	 (n (minroot (+ (sq xr) (sq yr) (sq zr))
+		     (* 2 (+ (* (- (x pt) (x c)) xr)
+			     (* (- (y pt) (y c)) yr)
+			     (* (- (z pt) (z c)) zr)))
+		     (+ (sq (- (x pt) (x c)))
+			(sq (- (y pt) (y c)))
+			(sq (- (z pt) (z c)))
+			(- (sq (sphere-radius s)))))))
+    (if n
+	(make-instance 'point1 :x (+ (x pt) (* n xr))
+		               :y (+ (y pt) (* n yr))
+			       :z (+ (z pt) (* n zr))))))
+
+(defmethod normal ((s sphere) (pt point1))
+  (let ((c (sphere-center s)))
+    (unit-vector (- (x c) (x pt))
+		 (- (y c) (y pt))
+		 (- (z c) (z pt)))))
+
+
+
+
