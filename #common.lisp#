@@ -4849,15 +4849,28 @@ my-buf
 ;;mess with the spheres 
 (defun ray-test (&optional (res 1))
   (setf *world* nil)
-  (defsphere 0 -300 -1200 200 .8)
-  (defsphere -80 -150 -1200 200 .7)
-  (defsphere 70 -100 -1200 200 .9)
+  (defsphere 0 -300 -500 200 .8)
+  (defsphere -80 -150 -500 200 .7)
+  (defsphere 70 -100 -500 200 .9)
   (do ((x -2 (1+ x)))
       ((> x 2))
     (do ((z 2 (1+ z)))
 	((> z 7))
       (defsphere (* x 200) 300 (* z -400) 40 .75)))
-  (tracer (make-pathname :name "/Users/aliya/lisp/lisp/spheres.pgm") res))
+  (tracer (make-pathname :name "/Users/aliya/lisp/lisp/spheres-test.pgm") res))
+
+;;works on mac laptop not on desktop
+(defun ray-test2 (&optional (res 1))
+  (setf *world* nil)
+  (defsphere 0 -300 -1200 200 .3)
+  (defsphere -80 -150 -1200 200 .3)
+  (defsphere 70 -100 -1200 200 .9)
+  (do ((x -2 (1+ x)))
+      ((> x 4))
+    (do ((z 2 (1+ z)))
+	((> z 10))
+      (defsphere (* x 200) 300 (* z -400) 10 1)))
+  (tracer (make-pathname :name "spheres-test.pgm") res))
 
 ;(ray-test 4)
 
@@ -6272,7 +6285,7 @@ lst ;(2) ;;notice how the above doesn't match this one
 		 (- (y c) (y pt))
 		 (- (z c) (z pt)))))
 
-(defmethod ray-test2 (&optional (res 1))
+(defmethod ray-test3 (&optional (res 1))
   (setf *world* nil)
   (defsphere 0 -300 -1200 200 .8)
   (defsphere -80 -150 -1200 200 .7)
@@ -6282,8 +6295,9 @@ lst ;(2) ;;notice how the above doesn't match this one
     (do ((z 2 (1+ z)))
 	((> z 7))
       (defsphere (* x 200) 300 (* z -400) 40 .75)))
-  (tracer (make-pathname :name "/Us
+  (tracer (make-pathname :name "sphere-test2.png") res))
 
 
-
+;;11-3 - see notebook - use formula 
+;a : c d e f h g
 
