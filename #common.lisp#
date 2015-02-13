@@ -6300,4 +6300,111 @@ lst ;(2) ;;notice how the above doesn't match this one
 
 ;;11-3 - see notebook - use formula 
 ;a : c d e f h g
+;;11-3-a - a c d e f g h
+;;11-3-b - b d e f g h c
+
+;;11-4 
+;precedence:      takes object and ret precedence list, classes ordered
+                  ;from most specific to least specific
+;methods:         takes a generic function and rets list of all it's methods
+;specializations: takes a method and ret a list of specializations of
+                  ;the params. Each elem of the ret list will be either
+                  ;a class or a list of the form (eql x) or t (indicating param is unspecialized)
+
+(defun most-spec-app-method (fn args)
+  (let ((classlst (mapcar #'precedence args)))
+    (dolist (meth (methods fn))
+      (if (do ((i 0 (1+ i))
+	       (spec (specializations meth) (cdr spec)))
+	      ((not spec) t)
+	    (or (member (car spec) (nth i classlist) :test #'equal)
+		(return)))
+	  (return-from most-spec-app-method meth)))))
+
+
+
+;;;;Chapter 12
+
+;;shared structure - a list being part of another
+(setf *part* (list 'b 'c)); 
+	  
+(setf *whole* (cons 'a *part*));
+
+(tailp *part* *whole*); T
+;;the first cons is part of (in fact, is the cdr of) the second. 
+
+(defun our-tailp (x y)
+  (or (eql x y)
+      (and (consp y)
+	   (our-tailp x (cdr y)))))
+
+;say we used 
+(eql '(b c) '(b c)); NIL
+
+(eql *part* (cdr *whole*)); T ;because of def of eql
+
+(setf *part* (list 'b 'c)
+      *whole1* (cons 1 *part*)
+      *whole2* (cons 2 *part*))
+;;these two lists are now part of the other without either being a tail
+;; of the other
+(tailp *part* *whole1*); T
+(tailp *part* *whole2*); T
+(tailp *whole1* *whole2*); nil
+(tailp *whole2* *whole1*); nil
+
+;;top-level list structure; 
+(list 'a '(b c) 'd); so top level would be 'A '(B C) and 'D - where `(B C) is like one element - ie it refers to the conses that make up a list not any conses that make up it's elements
+
+;;two lists contain the same list as an element
+(setf element (list 'a 'b)
+      holds1 (list 1 element 2)
+      holds2 (list element 3))
+
+(eql (cadr holds1) element); T
+(tailp element holds1); nil
+(tailp element holds2); nil
+
+;;second element in holds1 shares structre with holds2, 
+;;BUT holds1 and holds2 do not share structure as lists.
+;;they only share structure if they share top-level list structure
+
+;;two kinds of copying
+
+;;this one will avoid sharing top-level list structure with the orig list
+;;but see if (car lst) is another list then it just gets consed
+(defun our-copy-list (lst)
+  (if (null lst)
+      nil
+      (cons (car lst) (our-copy-list (cdr lst)))))
+
+;;to ret a list that doesn't share even a tree structure with the orig lst
+;;look this won't have anything in commonon since each element of the list
+;;gets copied 
+(defun our-copy-tree (tr)
+  (if (atom tr)
+      tr
+      (cons (our-copy-tree (car tr))
+	    (our-copy-tree (cdr tr)))))
+;;call both and see the difference see notbook for drawings 
+(defparameter *x* '(x a d))
+(defparameter *x1* `(x a ,*part* d))
+
+(defparameter *x2* (our-copy-tree *x*))
+(defparameter *x3* (our-copy-tree *x*))
+
+(print *part*); (B C)
+;*x4* will now only not share top-level structure
+(defparameter *x4* (our-copy-list *x1*)); (X A (B C) D)
+(setf (car *part*) 1); (1 C)
+;;see when we change part how it changes 
+(print *x4*); (X A (1 C) D)
+;;the same thing with our-copy-tree thing will change
+
+(setf whole (list 'a 'b 'c)
+      tail (cdr whole))
+
+(setf (second tail) 'e)
+;now whole is (A B E)
+;and tail is (B E)
 
