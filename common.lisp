@@ -6407,3 +6407,94 @@ lst ;(2) ;;notice how the above doesn't match this one
 (setf (second tail) 'e)
 ;now whole is (A B E)
 ;and tail is (B E)
+;;both tail and whole modify the same cons
+
+;;12.3 Queue - shared structure to rep a queue
+;;fifo queue; insert and retrieve from a diferent end
+
+(defun make-queue() (cons nil nil))
+
+(defun enqueue(obj q)
+  (if (null (car q))
+      (setf (cdr q) (setf (car q) (list obj)))
+      (setf (cdr (cdr q)) (list obj)
+	    (cdr q) (cdr (cdr q))))
+  (car q))
+
+(defun dequeue (q)
+  (pop (car q)))
+
+(setf q1 (make-queue)); (nil nil)
+
+(progn (enqueue 'a q1); ((A) A)
+       (enqueue 'b q1); ((A B) B)
+       (enqueue 'c q1)); ((A B C) C)
+
+;(setf (car q1) (list 'a)); so if (nil . nil) then goes  (A . nil)
+;(setf (cdr q1) `(A . nil)
+
+(setf q1 (make-queue))
+
+;see what happens when manually going through steps of enqueue to understand
+(setf q1 (make-queue)) ; (cons nil nil) ; (nil . nil)
+(setf (car q1) (list 'a)); (A . nil); retruns (A)
+;;;SEE HERE the first time i did this i didn't understand that car q (think of it as a cons box combo [][] representing [car][cdr])
+; i had this
+; (setf (cdr q1) (list 'a)); see how this would mean the cdr points to a new 
+;;cons instead of both the car and cons pointing to the same element...which was the point of the whole chapter
+;q1 ([]  . [])
+;     |     |
+;     v     v
+;  (a.nil) (a.nil)
+;
+;instead we want this
+;q1 ([]  . [])
+;     |     |
+;     v     v
+;  (a.nil) (a.nil)
+
+
+;instead if we do this it's like both the "front" and "back" (the car and the cdr of q) will point to the same block
+(setf (cdr q1) (setf (car q1) (list 'a))); (A)
+
+
+(print q1); ((A) A); where does the second bracket go? 
+(car q1); (A)
+(cdr q1); (A)
+(eql (car q1) (cdr q1)); T
+
+(cons '(a) '(a)); ((A) A) ;that is just how it's displayed
+
+(setf q (make-queue))
+(enqueue 'a q)
+(print q); ((A) A)
+(car q); (A)
+(cdr q); (A) ; cdr returns a list
+
+
+;;step 2a adding something to the queue, where we make a cons and change "back"
+(cdr (cdr q1)); nil 
+(cddr q1); nil 
+(setf (cdr (cdr q1)) (list 'b)); (B)
+(cdr (cdr q1)); (B)
+(car q1); (A)
+(cdr q1); (A B)
+(print q1); ((A) A B) 
+;;;step 2b 
+(setf (cdr q1) (cdr (cdr q1)));ret (B)
+(print q1); ((A) B) ; NO LONGER THE CASE SEE THE ABOVE CONFUSION AN RE-RUN THESE; KEPT HERE BECAUSE THEY WERE A GOOD REMINDER TO ALWAYS REMEMBER THE 
+(car q1); (A) ;NOTE................
+(cdr q1); (B)
+
+(setf q (make-queue))
+(enqueue 'a q); (A)
+(enqueue 'b q); (A B)
+(print q); ((A B) B)
+(car q); (A B) ;NOTE...............
+(cdr q); (B)
+
+;;hmm A queue is a pair of a list, and the last cons in the same list;
+;;call these "front" (pair of list) and "back" (last cons in that same list)
+;;to retrieve an element from the queue just pop "front". 
+;;to add an element, we create a new cons, make it the cdr of the back (the last cons of the same list)
+;;and then set "back" to it. 
