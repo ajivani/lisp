@@ -6475,13 +6475,13 @@ lst ;(2) ;;notice how the above doesn't match this one
 ;;step 2a adding something to the queue, where we make a cons and change "back"
 (cdr (cdr q1)); nil 
 (cddr q1); nil 
-(setf (cdr (cdr q1)) (list 'b)); (B)
-(cdr (cdr q1)); (B)
+(setf (cdr (cdr q1)) (list 'b)); (B) ; makes the "back"'s (the cdr of q) point to the last object (list 'b) in this case
+(cdr (cdr q1)); (B); make the 
 (car q1); (A)
 (cdr q1); (A B)
 (print q1); ((A) A B) 
 ;;;step 2b 
-(setf (cdr q1) (cdr (cdr q1)));ret (B)
+(setf (cdr q1) (cdr (cdr q1)));ret (B) ;now it makes the "back" point to the last element that we just added  (so now "front" now points to A and cdr now points to B...also a's cdr points to b and b's cdr now points to nil)
 (print q1); ((A) B) ; NO LONGER THE CASE SEE THE ABOVE CONFUSION AN RE-RUN THESE; KEPT HERE BECAUSE THEY WERE A GOOD REMINDER TO ALWAYS REMEMBER THE 
 (car q1); (A) ;NOTE................
 (cdr q1); (B)
@@ -6498,3 +6498,11 @@ lst ;(2) ;;notice how the above doesn't match this one
 ;;to retrieve an element from the queue just pop "front". 
 ;;to add an element, we create a new cons, make it the cdr of the back (the last cons of the same list)
 ;;and then set "back" to it. 
+
+;;so if did this
+(setf q (make-queue))
+(enqueue 'a q)
+(enqueue 'b q); now we're at the above step 2 completion
+;;say we do this
+(enqueue 'c q); first get the last element - go through "back" (the cdr of q) and get it's cdr - this shold be nil (see drawing in notebook) - and make that the new element that points to nil
+;now make the cdr of q, ie "back" point to the last element
