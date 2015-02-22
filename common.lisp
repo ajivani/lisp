@@ -6524,7 +6524,7 @@ lst ;(2) ;;notice how the above doesn't match this one
      (setf (cdr (last x)) y) ;go to the last cons cell and make it point to y ;; [][]->[]....
      x);return x ie the first list which is both lists
     (t
-     y)))
+     y))); just return the second list if x isn't a list
 ;;or like this to make it more clear
 (defun nconc2 (x y)
   (if (consp x)
@@ -6533,3 +6533,19 @@ lst ;(2) ;;notice how the above doesn't match this one
 	x); return x ie the first list which now combines (destructively) both lists
       y));;but why return y if x isn't a list
 
+;;mapcan is like mapcar, but splices together the values returned by the 
+;;functions (which must be lists) using nconc:
+(mapcan #'list 
+	'(a b c)
+	'(1 2 3 4))
+;(A 1 B 2 C 3)
+
+;;here's how the function might be defined
+(defun our-mapcan (fn & &rest lsts)
+  (apply #'nconc (apply #'mapcar fn lsts))); 
+
+(our-mapcan #'list
+	    '(a b c)
+	    '(1 2 3 4))
+
+(apply #'mapcar #'list '((a b c) (1 2 3 4))); ((1 A) (2 B) (3 C))
