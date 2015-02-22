@@ -6530,5 +6530,6 @@ lst ;(2) ;;notice how the above doesn't match this one
   (if (consp x)
       (progn
 	(setf (cdr (last x)) y); set the last element of the first list's cdr to point to the second list
-	x); return x ie the first list 
+	x); return x ie the first list which now combines (destructively) both lists
+      y));;but why return y if x isn't a list
 
