@@ -6506,3 +6506,29 @@ lst ;(2) ;;notice how the above doesn't match this one
 ;;say we do this
 (enqueue 'c q); first get the last element - go through "back" (the cdr of q) and get it's cdr - this shold be nil (see drawing in notebook) - and make that the new element that points to nil
 ;now make the cdr of q, ie "back" point to the last element
+
+;;;12.4 destructive functions
+;;there are functions that are allowed to modify list but might not do anything
+(setf lst '(a r a b i a))
+(delete 'a lst); returns (R B I)
+(print lst); (A R B I)
+
+;;if you want to keep sideeffects you have to setf them
+
+(setf lst (delete 'a lst)); ps C-x o (swtich between open split screen buffer views)
+
+;;desstructive version of append nconc
+(defun nconc2 (x y)
+  (cond 
+    ((consp x)
+     (setf (cdr (last x)) y) ;go to the last cons cell and make it point to y ;; [][]->[]....
+     x);return x ie the first list which is both lists
+    (t
+     y)))
+;;or like this to make it more clear
+(defun nconc2 (x y)
+  (if (consp x)
+      (progn
+	(setf (cdr (last x)) y); set the last element of the first list's cdr to point to the second list
+	x); return x ie the first list 
+
