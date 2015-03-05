@@ -6671,28 +6671,84 @@ lst ;(2) ;;notice how the above doesn't match this one
 	     (bsti1 obj r <)
 	     (setf (node-r bst) (make-node :elem obj))))))))
 
-
+;;bst definitionin in book is broken use the one from the link
 (defun bst-delete (obj bst <)
-  (if bst (bstd obj bst nil nil <))
-  bst)
+  (cond
+    ((null bst) nil)
+    ((eql obj (node-elem bst))
+     (del-root bst))
+    (t
+     (if (funcall < obj (node-elem bst))
+	 (setf (node-l bst) (bst-delete obj (node-l bst) <))
+	 (setf (node-r bst) (bst-delete obj (node-r bst) <)))
+     bst)))
 
-(defun bstd (obj bst prev dir <)
-  (let ((elem (node-elem bst)))
-    (if (eql elem obj)
-	(let ((rest (percolate! bst)))
-	  (case dir
-	    (:l (setf (node-l prev) rest))
-	    (:r (setf (node-r prev) rest))))
-	(if (funcall < obj elem)
-	    (if (node-l bst)
-		(bstd obj (node-l bst) bst :l <))
-	    (if (node-r bst)
-		(bstd obj (node-r bst) bst :r <))))))
+;corrected bst-delete
+(defun bst-delete (obj bst <)
+  (if (null bst)
+      nil ;returns nothing
+      (if (eql (node-elem bst) obj)
+	  (del-root bst); returns a node
+	  (progn 
+	    (if (funcall < obj (node-elem bst))
+		(setf (node-l bst) (bst-delete obj (node-l bst) <)) ;set the left side to be the result of del-root or nil
+		(setf (node-r bst) (bst-delete obj (node-r bst) <))); otherwsie look for obj on the right side and then set the rght side to be the result of delete or nil
+	    bst))))
+
+(defun del-root (bst)
+  (let ((l (node-l bst))
+	(r (node-r bst)))
+    (cond 
+      ((null l) r)
+      ((null r) l)
+      (t        (if (zerop (random 2))
+		    (cutnext r bst nil)
+		    (cutprev l bst nil))))))
+
+;A deleted internal node needs to be replaced either by the maximal node in the left subtree
+;or by the minimal node in the right subtree, and your function does not do this."
+;draw out different scenarios
+(defun cutnext (bst root prev)
+  (if (node-l bst)
+      (cutnext (node-l bst) root bst)                 ;traverse tree until you get to left most (and we're starting from the right side so we get leftmost on right side)
+      (if prev
+	  (progn
+	    (setf (node-elem root) (node-elem bst)    ;root still has pointers that point to the right thing, we just need to change the element that root points to
+		  (node-l prev)    (node-r bst))      ;think of scenario where a node deepr than bst but on the bst's right - for example if i added (7 100 9 20 15 30) - we would want the 9 to replace the 7 being deleted as teh root of the tree ;think about if the leftmost element on the right side has a right leaf. that leaf will need to be the left side of the "prev" (ie the current bst node's parent) since the leaf (which could be a bst itself) will be less than the parent; see drawings
+	    root)                                     ;without this, we have no 
+	  (progn
+	    (setf (node-l bst) (node-l root))         ;case where 3 node bst (parent and 2 children) and parent gets deleted. child on right needs to move up and have it's node-l point to the child on the left (just like the parent)
+	   bst))))                                    ;no more references to root after this
+
+(defun cutprev (bst root prev)
+  (if (node-r bst)
+      (cutprev (node-r bst) root bst)
+      (if prev
+	  (progn
+	    (setf (node-elem root) (node-elem bst)
+		  (node-r prev)    (node-l bst))      ;for example if i added (5 2 4 3 3.2 3.5) - in this case say we're deleteting the 5 we want it replaced 4 and we want node-r of 2 to point to the 3.2
+	    root)
+	  (progn
+	    (setf (node-r bst) (node-r root))
+	    bst))))
+
 
 (defparameter *bst* nil)
 
 (dolist (x '(7 2 9 8 4 1 5 12))
   (setf *bst* (bst-insert1! x *bst* #'<)))
 
+;leftmost on right side is 8 and rightmost on left side is 5
+(bst-delete 7 *bst* #'<); can return #<5> or #<8> depending on what random says
+
+;go through the tree and see (it works :)) (node-l (node-r *bst*))
+
+(bst-delete 9 *bst* #'<); can be either #<8> or #<12>
+
+(node-r *bst*); this time it's 12 that is the node-r
+(node-l (node-r *bst*)); and 8 that is on it's left
+
+
+;;doubly linked list
 
 
