@@ -6751,4 +6751,41 @@ lst ;(2) ;;notice how the above doesn't match this one
 
 ;;doubly linked list
 
+(defstruct (dl (:print-function print-dl))
+  prev next data)
 
+(defun print-dl (dl stream depth)
+  (declare (ignore depth))
+  (format stream "#<DL ~A>" (dl->list dl)))
+
+;;this version would print from both sides 
+(defun dl->list2 (lst)
+  (if (dl-p lst) ;cool right all structures seem to have this, must be a way to define this - how does it just know if something is eql to an obj type
+      (if (dl-prev lst)
+	  (progn
+	    (cons (dl->list2 (dl-prev lst))
+		  (cons (dl-data lst) 
+			(dl->list2 (dl-next lst)))))
+	  (cons (dl-data lst)
+		(dl->list2 (dl-next lst))))))
+
+(defun dl->list (lst)
+  (if (dl-p lst)
+      (cons (dl-data lst)
+	    (dl->list (dl-next lst)))))
+
+(defvar *dl* (make-dl :data 3))
+;;add some more elements to the doubly linked list
+(setf (dl-next *dl*) (make-dl :data 5))
+(setf (dl-next (dl-next *dl*)) (make-dl :data 15))
+(setf (dl-prev *dl*) (make-dl :data 1))
+(setf (dl-prev (dl-prev *dl*)) (make-dl :data -1))
+
+(defun flatten (x)
+  (labels ((rec (x acc)
+		(cond ((null x) acc)
+		      ((atom x) (cons x acc))
+		      (t (rec (car x) (rec (cdr x) acc))))))
+    (rec x nil)))
+
+(flatten (dl->list2 *dl*));see how this would only work if data was an int and not a list of int
