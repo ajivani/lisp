@@ -6804,7 +6804,8 @@ lst ;(2) ;;notice how the above doesn't match this one
       (setf (dl-prev lst) elem))
     elem))
 
-;the initial value being nil means the first call will be to dl-insert with x and nil (which returns a newly created dl with 
+;the initial value being nil means the first call will be to dl-insert with x and nil (which returns a newly created dl with x being the data value of the dl struct)
+;the from-end means use it's created in the order you type it ie (dl-list '(a b c)) makes a dl like so (dl-insert a (dl-insert b (dl-insert (c nil))))
 (defun dl-list (&rest args)
   (reduce #'dl-insert args ;reduce takes a function and an arg ; also the function must take 2 args exaclty
 	  :from-end t :initial-value nil))
